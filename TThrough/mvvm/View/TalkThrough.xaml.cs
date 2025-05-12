@@ -28,7 +28,8 @@ namespace TThrough.mvvm.View
         public TalkThrough(TalkthroughViewModel viewModel) 
         {
             InitializeComponent();
-            DataContext = viewModel;
+            TalkthroughViewModel vm = viewModel;
+
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)

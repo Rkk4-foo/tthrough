@@ -54,7 +54,6 @@ namespace TThrough.Servicios
         {
             byte[] buffer = new byte[1024];
 
-
             //Si la cancelación no se ha pedido
             if (!token.IsCancellationRequested) 
             {

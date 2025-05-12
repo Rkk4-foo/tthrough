@@ -9,6 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Net.Sockets;
+using TThrough.Servicios;
+using System.Windows.Threading;
 
 namespace TThrough.mvvm.ViewModel
 {
@@ -18,7 +20,7 @@ namespace TThrough.mvvm.ViewModel
 
         private ICommand _enviarCommand { get; }
 
-        private TcpClient _client;
+        private ServicioTCP _conexionTCP;
 
         public ObservableCollection<Models.Usuario> Usuarios { get; set; }
 
@@ -37,8 +39,6 @@ namespace TThrough.mvvm.ViewModel
             set { _NombrePublico = value; OnPropertyChanged(); }
         }
 
-
-
         #endregion
 
 
@@ -55,8 +55,27 @@ namespace TThrough.mvvm.ViewModel
 
         #region Methods
 
+        public void InicializarServicio(ServicioTCP tcp) 
+        {
+            _conexionTCP = tcp;
+            _conexionTCP.MensajeRecibido += EnMensajeRecibido;
+        }
 
+        private void EnMensajeRecibido(object? sender, string cuerpoMensaje) 
+        {
+            Dispatcher.Invoke(() =>
+            {
 
+                Mensajes.Add(new Models.Mensaje
+                {
+                    HoraEnvio = DateTime.Now,
+                    FechaEnvio = DateTime.Now,
+                    IdMensaje = Guid.NewGuid().ToString().ToLower()
+                });
+
+                
+            });
+        }
 
         public static ImageSource ConvertBytesToImage(byte[] bytes)
         {
