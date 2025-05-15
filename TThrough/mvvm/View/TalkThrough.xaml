@@ -4,15 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TThrough"
-        xmlns:viewmodel="clr-namespace:TThrough.mvvm.ViewModel"
+        
         mc:Ignorable="d"
         Background="#36393F"
         Title="TalkThrough" Height="720" Width="1280"
         WindowStyle="None">
 
-    <Window.DataContext>
-        <viewmodel:TalkthroughViewModel/>
-    </Window.DataContext>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -72,7 +69,7 @@
                       ItemsSource="{Binding Usuarios}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="10,5,0,0">
                             <Image Source="{Binding FotoPerfil}"
                                    Height="28"
                                    Width="28"/>
@@ -93,11 +90,30 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Grid.Row="1" Style="{StaticResource RoundedButton}"
-                    Height="40" Width="150"
-                    Background="#FF7043"
-                    Foreground="White"
-                    Content="CONFIGURACION"/>
+            <StackPanel Grid.Row="1" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image Source="{Binding FotoPerfil}"
+                       Height="28"
+                       Width="28"/>
+                <StackPanel Orientation="Vertical">
+                    <Label Content="{Binding NombrePublico}"
+                                       Foreground="White"
+                                       FontFamily="Arial"
+                                       FontWeight="Bold"
+                                       Padding="0"/>
+
+                    <Label Content="Conectado"
+                           Foreground="White"
+                           FontFamily="Arial"
+                           FontWeight="Bold"
+                           Padding="0"/>
+                </StackPanel>
+                <Image Source="/icons/settings.png" 
+                       Height="72"
+                       Width="72"
+                       Margin="40,0,0,0">
+                </Image>
+            </StackPanel>
         </Grid>
 
         <Grid Grid.Row="1" Grid.Column="1">
@@ -106,21 +122,42 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <TextBox Grid.Row="0" Background="Transparent" 
-                     IsReadOnly="True"
-                     BorderBrush="Transparent"
-                     Focusable="False"
-                     IsEnabled="False"/>
-            <TextBox Grid.Row="1" Style="{StaticResource RoundedTextBox}" 
+            <ListBox Background="Transparent" 
+                     BorderBrush="Transparent" 
+                     ItemsSource="{Binding ChatLineas}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Image Source="{Binding FtPerfil}"
+                                   Height="28"
+                                   Width="28"/>
+                            
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding NombrePublico}" Foreground="White"
+                                           FontFamily="Arial" TextAlignment="Left"/>
+                                <TextBlock Text="{Binding CuerpoMensaje}" Foreground="White"
+                                           FontFamily="Arial" TextAlignment="Left"/>
+                            </StackPanel>
+                            
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBox x:Name="TextBoxChat" Text="{Binding Mensaje, UpdateSourceTrigger=PropertyChanged}"
+                     Grid.Row="1" 
+                     Style="{StaticResource RoundedTextBox}" 
                      Height="50"
                      Width="900"
                      HorizontalAlignment="Left"/>
+
             <Button Grid.Row="1" HorizontalAlignment="Right" Style="{StaticResource RoundedButton}"
                     Width="100" Height="40"
                     Margin="0,0,10,0"
                     Background="#FF7043"
                     Foreground="White"
-                    Content="Enviar"/>
+                    Content="Enviar"
+                    Command="{Binding _enviarCommand}"/>
         </Grid>
     </Grid>
 </Window>

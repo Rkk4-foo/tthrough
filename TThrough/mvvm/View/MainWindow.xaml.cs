@@ -12,16 +12,19 @@ namespace TThrough.mvvm.View
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel pageModel;
         public MainWindow()
         {
             InitializeComponent();
-            
+
+            DataContext = pageModel = new MainWindowViewModel();
+
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed) 
-             DragMove();
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
         }
 
         private void Cerrar_Click(object sender, RoutedEventArgs e)
@@ -31,7 +34,7 @@ namespace TThrough.mvvm.View
 
         private void Maximizar_Click(object sender, RoutedEventArgs e)
         {
-            if(Application.Current.MainWindow.WindowState != WindowState.Maximized)
+            if (Application.Current.MainWindow.WindowState != WindowState.Maximized)
                 Application.Current.MainWindow.WindowState = WindowState.Maximized;
             else
                 Application.Current.MainWindow.WindowState = WindowState.Normal;
@@ -45,31 +48,30 @@ namespace TThrough.mvvm.View
 
         private void EnviarAVM(object sender, RoutedEventArgs e)
         {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                vm.Contrasena = ((PasswordBox)sender).Password;
-            }
+
+            pageModel.Contrasena = ((PasswordBox)sender).Password;
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext is MainWindowViewModel vm) 
-            {
-                vm.LoginAsync += Vm_LoginAsync;
-                
-            }
+
+            pageModel.LoginAsync += Vm_LoginAsync;
+
+
         }
 
-        
+
 
         private void Vm_LoginAsync(object? sender, Usuario e)
         {
-            TalkthroughViewModel talkthroughViewModel = new TalkthroughViewModel();
+            var panel = new TalkThrough();
+            TalkthroughViewModel talkthroughViewModel = new TalkthroughViewModel(pageModel._servicioTCP);
             talkthroughViewModel.Usuarios.Add(e);
             // Abre la siguiente ventana
-            var panel = new TalkThrough();
+
             panel.DataContext = talkthroughViewModel;
-            
+
             panel.Show();
 
             // Cierra esta ventana
