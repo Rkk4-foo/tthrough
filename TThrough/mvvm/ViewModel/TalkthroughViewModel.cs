@@ -35,11 +35,26 @@ namespace TThrough.mvvm.ViewModel
 
         public TextBox TextBoxChat { get { return _TextBoxChat; } set { _TextBoxChat = value; OnPropertyChanged(); } }
 
+        private Models.Usuario _selectedItem { get; set; }
+
+        public Models.Usuario SelectedItem 
+        { 
+            get 
+            { 
+                return _selectedItem; 
+            } 
+            set 
+            { 
+                _selectedItem = value;
+                OnPropertyChanged(); 
+            }
+        }
+
         public ObservableCollection<Models.Usuario> Usuarios { get; set; }
 
         public ObservableCollection<Models.Mensaje> Mensajes { get; set; }
 
-        public ObservableCollection<VistaMensaje> ChatLineas { get; set; } 
+        public ObservableCollection<VistaMensaje> ChatLineas { get; set; }
 
         private string _Mensaje;
         public string Mensaje
@@ -72,7 +87,7 @@ namespace TThrough.mvvm.ViewModel
             Mensajes = new ObservableCollection<Models.Mensaje>();
             ChatLineas = new ObservableCollection<VistaMensaje>();
             InicializarServicio(client!);
-            
+
         }
 
 
@@ -84,7 +99,7 @@ namespace TThrough.mvvm.ViewModel
         {
             _conexionTCP = tcp;
             _conexionTCP.MensajeRecibido += EnMensajeRecibido;
-            
+
 
             _ = _conexionTCP.RecibirMensajes(CancellationToken.None);
         }
@@ -100,10 +115,9 @@ namespace TThrough.mvvm.ViewModel
                     FechaEnvio = DateTime.Now,
                     HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
-
                 };
 
-                var UsuarioSender =_context.Usuarios.Single(x=>x.NombrePublico == "Rkka");
+                var UsuarioSender = _context.Usuarios.Single(x => x.NombrePublico == SelectedItem.NombrePublico);
 
                 ChatLineas.Add(new VistaMensaje
                 {
@@ -113,7 +127,7 @@ namespace TThrough.mvvm.ViewModel
                 });
 
                 Mensajes.Add(datosMensajes);
-                
+
                 _context.Add<Models.Mensaje>(datosMensajes);
 
                 _conexionTCP.EnviarMensaje(aux);
@@ -127,9 +141,9 @@ namespace TThrough.mvvm.ViewModel
                 var datosMensajes = new Models.Mensaje()
                 {
                     FechaEnvio = DateTime.Now,
-                    HoraEnvio= DateTime.Now,
+                    HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
-                    
+
                 };
 
                 Mensajes.Add(datosMensajes);
@@ -138,7 +152,7 @@ namespace TThrough.mvvm.ViewModel
                     NombrePublico = this.NombrePublico,
                     CuerpoMensaje = cuerpoMensaje,
                     FtPerfil = ConvertBytesToImage(Imagen)
-                }); 
+                });
             });
         }
 
