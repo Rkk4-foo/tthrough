@@ -26,7 +26,7 @@ namespace TThrough.mvvm.ViewModel
         #region Propiedades
         private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
 
-        private Servicios.ServicioTCP _servicioTCP;
+        public Servicios.ServicioTCP _servicioTCP;
 
         private ObservableCollection<Usuario> _usuarios { get; set; }
 

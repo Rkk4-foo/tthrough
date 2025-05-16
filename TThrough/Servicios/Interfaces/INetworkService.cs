@@ -11,8 +11,6 @@ namespace TThrough.Servicios.Interfaces
         bool ClienteConectado();
         Task EnviarMensaje(string message);
 
-        
-
         Task RecibirMensajes(CancellationToken token);
     }
 }

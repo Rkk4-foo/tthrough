@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using TThrough.mvvm.ViewModel;
+using TThrough.Servicios;
 
 namespace TThrough.mvvm.View
 {
@@ -25,10 +26,13 @@ namespace TThrough.mvvm.View
             InitializeComponent();
         }
 
-        public TalkThrough(TalkthroughViewModel viewModel) 
+        public TalkThrough(TalkthroughViewModel viewModel,ServicioTCP tcp) 
         {
             InitializeComponent();
-            DataContext = viewModel;
+            TalkthroughViewModel vm = viewModel;
+            
+            DataContext = vm;
+
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)

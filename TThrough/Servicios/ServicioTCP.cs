@@ -18,6 +18,7 @@ namespace TThrough.Servicios
         private TcpClient _client {  get; set; }
         private NetworkStream _stream;
         public event EventHandler<string> MensajeRecibido;
+        public event EventHandler<string> MensajeEnviado;
 
         public bool ClienteConectado()
         {
@@ -41,6 +42,7 @@ namespace TThrough.Servicios
                 {
                     byte[] data = Encoding.UTF8.GetBytes( ":" + Environment.NewLine + message);
                     _stream.Write(data, 0, data.Length);
+                    MensajeEnviado?.Invoke(this, message);
                 }
             });
         }
@@ -54,12 +56,12 @@ namespace TThrough.Servicios
         {
             byte[] buffer = new byte[1024];
 
-
             //Si la cancelación no se ha pedido
             if (!token.IsCancellationRequested) 
             {
                 try
-                {
+                {   
+                    
                     int bytesLeidos = await _stream.ReadAsync(buffer, 0, buffer.Length);
 
                     if (bytesLeidos > 0) 
