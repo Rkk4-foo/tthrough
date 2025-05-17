@@ -26,13 +26,24 @@ namespace TThrough.mvvm.View
             InitializeComponent();
         }
 
-        public TalkThrough(TalkthroughViewModel viewModel,ServicioTCP tcp) 
+        public TalkThrough(TalkthroughViewModel viewModel) 
         {
             InitializeComponent();
             TalkthroughViewModel vm = viewModel;
             
             DataContext = vm;
 
+
+            vm.PopUpAmigosAction = () =>
+            {
+                var popUpViewModel = new PopUpAñadirAmigosViewModel(vm.context);
+
+                var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
+                
+                popUpViewModel.Usuarios = vm.Usuarios; 
+
+                popUpAñadirAmigos.Show();
+            };
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)

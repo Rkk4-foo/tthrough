@@ -61,20 +61,25 @@ namespace TThrough.mvvm.View
 
         }
 
-
+        /// <summary>
+        /// Crea el viewmodel de la ventana del chat tras el login correcto del usuario, así como la muestra del
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
 
         private void Vm_LoginAsync(object? sender, Usuario e)
         {
-            var panel = new TalkThrough();
+            
             TalkthroughViewModel talkthroughViewModel = new TalkthroughViewModel(pageModel._servicioTCP);
+            var panel = new TalkThrough(talkthroughViewModel);
             talkthroughViewModel.Usuarios.Add(e);
-            // Abre la siguiente ventana
+            
 
             panel.DataContext = talkthroughViewModel;
 
             panel.Show();
 
-            // Cierra esta ventana
+            
             this.Close();
         }
     }

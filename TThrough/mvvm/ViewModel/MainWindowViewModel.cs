@@ -24,6 +24,9 @@ namespace TThrough.mvvm.ViewModel
     {
 
         #region Propiedades
+
+        
+
         private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
 
         public Servicios.ServicioTCP _servicioTCP;
@@ -65,6 +68,8 @@ namespace TThrough.mvvm.ViewModel
             _usuarios = new ObservableCollection<Usuario>();
             ComandoRegistro = new AsyncRelayCommand(RegistrarUsuario);
             ComandoLogin = new AsyncRelayCommand(LoginCorrecto);
+
+            
         }
 
         #endregion

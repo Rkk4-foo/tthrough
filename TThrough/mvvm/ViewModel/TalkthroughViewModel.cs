@@ -24,11 +24,20 @@ namespace TThrough.mvvm.ViewModel
     {
         #region Properties
 
-        private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
+        public readonly TalkthroughContext context = TalkthroughContextFactory.SendContextFactory();
 
+        public Action? PopUpAmigosAction { get; set; }
+
+        public ICommand btnAñadirAmigos => new RelayCommand(_ =>
+        {
+            PopUpAmigosAction?.Invoke();
+        },
+        _ =>  true );
+        
         public ICommand _enviarCommand => new RelayCommand(
              _ => EnviarMensaje(),
              _ => !string.IsNullOrWhiteSpace(Mensaje));
+
         private ServicioTCP _conexionTCP;
 
         private TextBox _TextBoxChat { get; set; }
@@ -37,16 +46,16 @@ namespace TThrough.mvvm.ViewModel
 
         private Models.Chats _selectedItem { get; set; }
 
-        public Models.Chats SelectedItem 
-        { 
-            get 
-            { 
-                return _selectedItem; 
-            } 
-            set 
-            { 
+        public Models.Chats SelectedItem
+        {
+            get
+            {
+                return _selectedItem;
+            }
+            set
+            {
                 _selectedItem = value;
-                OnPropertyChanged(); 
+                OnPropertyChanged();
             }
         }
 
@@ -113,20 +122,20 @@ namespace TThrough.mvvm.ViewModel
                 var aux = Mensaje;
                 Mensaje = "";
 
-                // 1. Crear mensaje
+                
                 var datosMensajes = new Models.Mensaje()
                 {
                     FechaEnvio = DateTime.Now,
                     HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
-                    IdChat = SelectedItem.IdChat, // Asegúrate de que exista esta relación
-                    
+                    IdChat = SelectedItem.IdChat, 
+
                 };
 
-                
-                var UsuarioSender = _context.Usuarios.Single(u => u.NombrePublico == this.NombrePublico);
 
-                // 3. Añadir a la vista del chat
+                var UsuarioSender = context.Usuarios.Single(u => u.NombrePublico == this.NombrePublico);
+
+                
                 ChatLineas.Add(new VistaMensaje
                 {
                     NombrePublico = UsuarioSender.NombrePublico,
@@ -134,8 +143,8 @@ namespace TThrough.mvvm.ViewModel
                     FtPerfil = ConvertBytesToImage(UsuarioSender.FotoPerfil)
                 });
 
-                
-                var usuariosDelChat = _context.ChatsUsuarios
+
+                var usuariosDelChat = context.ChatsUsuarios
                     .Where(cu => cu.IdChat == SelectedItem.IdChat)
                     .Select(cu => cu.IdUsuario)
                     .ToList();
@@ -146,17 +155,15 @@ namespace TThrough.mvvm.ViewModel
                     {
                         IdMensaje = datosMensajes.IdMensaje,
                         IdUsuario = idUsuario
-
-
                     };
-                    _context.MensajesUsuarios.Add(mensajeUsuario);
+                    context.MensajesUsuarios.Add(mensajeUsuario);
                 }
 
-                
-                _context.Mensajes.Add(datosMensajes);
-                _context.SaveChanges();
 
-                // 6. Enviar mensaje por red (opcionalmente a cada usuario)
+                context.Mensajes.Add(datosMensajes);
+                context.SaveChanges();
+
+
                 _conexionTCP.EnviarMensaje(aux);
             });
         }

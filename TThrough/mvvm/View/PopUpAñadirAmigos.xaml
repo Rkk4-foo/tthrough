@@ -1,0 +1,98 @@
+﻿<Window
+    x:Class="TThrough.mvvm.View.PopUpAñadirAmigos"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:TThrough.mvvm.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="PopUpAñadirAmigos"
+    Width="400"
+    Height="450"
+    Background="Transparent"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+
+
+    <Border Background="#444444" CornerRadius="20">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10*" />
+                <RowDefinition Height="70*" />
+                <RowDefinition Height="15*" />
+            </Grid.RowDefinitions>
+
+            <TextBox
+                Grid.Row="0"
+                Width="300"
+                Margin="10,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Center"
+                Style="{StaticResource RoundedTextBox}"
+                Text="{Binding Busqueda}" />
+            <Button
+                Width="40"
+                Height="40"
+                Margin="0,0,20,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Command="{Binding ComandoBuscar}"
+                Style="{StaticResource RoundedButton}">
+
+                <Image Source="/icons/search.png" />
+            </Button>
+
+            <ListView
+                Grid.Row="1"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                ItemsSource="{Binding Usuarios}"
+                SelectedItem="{Binding UsuarioSeleccionado}">
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            <Image
+                                Width="28"
+                                Height="28"
+                                Source="{Binding FotoPerfil}" />
+                            <Label
+                                Content="{Binding NombrePublico}"
+                                FontSize="24"
+                                FontWeight="SemiBold"
+                                Foreground="White" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+
+            <StackPanel
+                Grid.Row="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation=" Horizontal">
+                <Button
+                    Width="100"
+                    Height="30"
+                    Margin="0,0,50,0"
+                    Background="#B22222"
+                    Click="Cancelar_Click"
+                    Content="CANCELAR"
+                    Foreground="White"
+                    Style="{StaticResource RoundedButton}" />
+                <Button
+                    Width="100"
+                    Height="30"
+                    Background="#FF7043"
+                    Content="AÑADIR"
+                    Foreground="White"
+                    Style="{StaticResource RoundedButton}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
