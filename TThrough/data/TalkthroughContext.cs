@@ -27,6 +27,10 @@ namespace TThrough.data
 
         public DbSet<Amigos> Amigos { get; set; }
 
+        public DbSet<Chats> Chats{ get; set; }
+
+        public DbSet<ChatsUsuarios> ChatsUsuarios { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             

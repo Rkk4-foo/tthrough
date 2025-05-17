@@ -12,8 +12,8 @@ using TThrough.data;
 namespace TThrough.Migrations
 {
     [DbContext(typeof(TalkthroughContext))]
-    [Migration("20250510133506_Inicial")]
-    partial class Inicial
+    [Migration("20250517104853_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,6 +43,40 @@ namespace TThrough.Migrations
                     b.HasIndex("IdUsuarioRemitente");
 
                     b.ToTable("Amigos");
+                });
+
+            modelBuilder.Entity("TThrough.mvvm.Models.Chats", b =>
+                {
+                    b.Property<string>("IdChat")
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaInicioChat")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NombreChat")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("IdChat");
+
+                    b.ToTable("Chats");
+                });
+
+            modelBuilder.Entity("TThrough.mvvm.Models.ChatsUsuarios", b =>
+                {
+                    b.Property<string>("IdChat")
+                        .HasColumnType("varchar(40)")
+                        .HasColumnOrder(1);
+
+                    b.Property<string>("IdUsuario")
+                        .HasColumnType("varchar(40)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("IdChat", "IdUsuario");
+
+                    b.HasIndex("IdUsuario");
+
+                    b.ToTable("ChatsUsuarios");
                 });
 
             modelBuilder.Entity("TThrough.mvvm.Models.Llamada", b =>
@@ -163,6 +197,25 @@ namespace TThrough.Migrations
                     b.Navigation("UsuarioPeticion");
 
                     b.Navigation("UsuarioRemitente");
+                });
+
+            modelBuilder.Entity("TThrough.mvvm.Models.ChatsUsuarios", b =>
+                {
+                    b.HasOne("TThrough.mvvm.Models.Chats", "Chat")
+                        .WithMany()
+                        .HasForeignKey("IdChat")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TThrough.mvvm.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("TThrough.mvvm.Models.LlamadaUsuario", b =>

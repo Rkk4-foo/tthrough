@@ -6,11 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TThrough.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class CreateDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Chats",
+                columns: table => new
+                {
+                    IdChat = table.Column<string>(type: "varchar(40)", nullable: false),
+                    NombreChat = table.Column<string>(type: "varchar(40)", nullable: false),
+                    FechaInicioChat = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Chats", x => x.IdChat);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Llamadas",
                 columns: table => new
@@ -80,6 +93,30 @@ namespace TThrough.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ChatsUsuarios",
+                columns: table => new
+                {
+                    IdChat = table.Column<string>(type: "varchar(40)", nullable: false),
+                    IdUsuario = table.Column<string>(type: "varchar(40)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatsUsuarios", x => new { x.IdChat, x.IdUsuario });
+                    table.ForeignKey(
+                        name: "FK_ChatsUsuarios_Chats_IdChat",
+                        column: x => x.IdChat,
+                        principalTable: "Chats",
+                        principalColumn: "IdChat",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChatsUsuarios_Usuarios_IdUsuario",
+                        column: x => x.IdUsuario,
+                        principalTable: "Usuarios",
+                        principalColumn: "IdUsuario",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LlamadasUsuarios",
                 columns: table => new
                 {
@@ -134,6 +171,11 @@ namespace TThrough.Migrations
                 column: "IdUsuarioRemitente");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChatsUsuarios_IdUsuario",
+                table: "ChatsUsuarios",
+                column: "IdUsuario");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LlamadasUsuarios_IdLlamada",
                 table: "LlamadasUsuarios",
                 column: "IdLlamada");
@@ -151,10 +193,16 @@ namespace TThrough.Migrations
                 name: "Amigos");
 
             migrationBuilder.DropTable(
+                name: "ChatsUsuarios");
+
+            migrationBuilder.DropTable(
                 name: "LlamadasUsuarios");
 
             migrationBuilder.DropTable(
                 name: "MensajesUsuarios");
+
+            migrationBuilder.DropTable(
+                name: "Chats");
 
             migrationBuilder.DropTable(
                 name: "Llamadas");
