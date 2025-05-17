@@ -35,9 +35,9 @@ namespace TThrough.mvvm.ViewModel
 
         public TextBox TextBoxChat { get { return _TextBoxChat; } set { _TextBoxChat = value; OnPropertyChanged(); } }
 
-        private Models.Usuario _selectedItem { get; set; }
+        private Models.Chats _selectedItem { get; set; }
 
-        public Models.Usuario SelectedItem 
+        public Models.Chats SelectedItem 
         { 
             get 
             { 
@@ -49,6 +49,8 @@ namespace TThrough.mvvm.ViewModel
                 OnPropertyChanged(); 
             }
         }
+
+        public ObservableCollection<Models.ChatsUsuarios> Chats { get; set; }
 
         public ObservableCollection<Models.Usuario> Usuarios { get; set; }
 
@@ -110,15 +112,21 @@ namespace TThrough.mvvm.ViewModel
             {
                 var aux = Mensaje;
                 Mensaje = "";
+
+                // 1. Crear mensaje
                 var datosMensajes = new Models.Mensaje()
                 {
                     FechaEnvio = DateTime.Now,
                     HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
+                    IdChat = SelectedItem.IdChat, // Asegúrate de que exista esta relación
+                    
                 };
 
-                var UsuarioSender = _context.Usuarios.Single(x => x.NombrePublico == SelectedItem.NombrePublico);
+                
+                var UsuarioSender = _context.Usuarios.Single(u => u.NombrePublico == this.NombrePublico);
 
+                // 3. Añadir a la vista del chat
                 ChatLineas.Add(new VistaMensaje
                 {
                     NombrePublico = UsuarioSender.NombrePublico,
@@ -126,14 +134,32 @@ namespace TThrough.mvvm.ViewModel
                     FtPerfil = ConvertBytesToImage(UsuarioSender.FotoPerfil)
                 });
 
-                Mensajes.Add(datosMensajes);
+                
+                var usuariosDelChat = _context.ChatsUsuarios
+                    .Where(cu => cu.IdChat == SelectedItem.IdChat)
+                    .Select(cu => cu.IdUsuario)
+                    .ToList();
 
-                _context.Add<Models.Mensaje>(datosMensajes);
+                foreach (var idUsuario in usuariosDelChat)
+                {
+                    var mensajeUsuario = new Models.MensajeUsuario
+                    {
+                        IdMensaje = datosMensajes.IdMensaje,
+                        IdUsuario = idUsuario
 
+
+                    };
+                    _context.MensajesUsuarios.Add(mensajeUsuario);
+                }
+
+                
+                _context.Mensajes.Add(datosMensajes);
+                _context.SaveChanges();
+
+                // 6. Enviar mensaje por red (opcionalmente a cada usuario)
                 _conexionTCP.EnviarMensaje(aux);
             });
         }
-
         private void EnMensajeRecibido(object? sender, string cuerpoMensaje)
         {
             Application.Current.Dispatcher.Invoke(() =>
@@ -143,7 +169,7 @@ namespace TThrough.mvvm.ViewModel
                     FechaEnvio = DateTime.Now,
                     HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
-
+                    IdChat = SelectedItem.IdChat,
                 };
 
                 Mensajes.Add(datosMensajes);

@@ -21,8 +21,8 @@ namespace TThrough.mvvm.Models
         [ForeignKey("Usuario"), Column(Order = 2)]
         public string IdUsuario { get; set; }
 
-        public required Usuario Usuario { get; set; }
+        public Usuario Usuario { get; set; } = null!;
 
-        public required Mensaje Mensaje { get; set; }
+        public Mensaje Mensaje { get; set; } = null!;
     }
 }

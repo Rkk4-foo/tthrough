@@ -14,8 +14,17 @@ namespace TThrough.mvvm.Models
     {
         [Column(TypeName = "varchar(40)")]
         public string IdMensaje { get; set; }
+
         public required DateTime FechaEnvio { get; set; }
+
         public required DateTime HoraEnvio { get; set; }
+
+        [Column(TypeName = "varchar(40)")]
+        public required string IdChat { get; set; }
+
+        [ForeignKey(nameof(IdChat))]
+        public Chats Chat { get; set; } = null!;
+
         public ICollection<MensajeUsuario> MensajesUsuarios { get; set; } = new List<MensajeUsuario>();
     }
 }
