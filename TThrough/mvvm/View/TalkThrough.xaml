@@ -101,6 +101,17 @@
                     FontWeight="SemiBold"
                     Foreground="White"
                     Style="{StaticResource AccionesButton}" />
+                <Button
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{Binding btnSolicitudesPendientes}"
+                    Content="Solicitudes pendientes"
+                    FontFamily="Arial"
+                    FontSize="8"
+                    FontWeight="SemiBold"
+                    Foreground="White"
+                    Style="{StaticResource AccionesButton}"
+                    Visibility="{Binding SolicitudesPendientes}" />
             </StackPanel>
 
 

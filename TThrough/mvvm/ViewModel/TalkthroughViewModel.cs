@@ -26,7 +26,16 @@ namespace TThrough.mvvm.ViewModel
 
         public readonly TalkthroughContext context = TalkthroughContextFactory.SendContextFactory();
 
+        public readonly string UsuarioConectadoActual;
+
         public Action? PopUpAmigosAction { get; set; }
+
+        public Action? PopUpSolicitudesAction { get; set; }
+
+
+        public ICommand btnSolicitudesPendientes => new RelayCommand(
+            _ => { PopUpSolicitudesAction?.Invoke(); },
+            _ => true);
 
         public ICommand btnAñadirAmigos => new RelayCommand(_ =>
         {
@@ -40,9 +49,7 @@ namespace TThrough.mvvm.ViewModel
 
         private ServicioTCP _conexionTCP;
 
-        private TextBox _TextBoxChat { get; set; }
-
-        public TextBox TextBoxChat { get { return _TextBoxChat; } set { _TextBoxChat = value; OnPropertyChanged(); } }
+        
 
         private Models.Chats _selectedItem { get; set; }
 
@@ -59,7 +66,19 @@ namespace TThrough.mvvm.ViewModel
             }
         }
 
-        public ObservableCollection<Models.ChatsUsuarios> Chats { get; set; }
+        private bool _solicitudesPendientes {  get; set; }
+
+        public bool SolicitudesPendientes 
+        {
+            get { return _solicitudesPendientes; }
+            set
+            {
+                _solicitudesPendientes = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<Models.Chats> Chats { get; set; }
 
         public ObservableCollection<Models.Usuario> Usuarios { get; set; }
 
@@ -92,11 +111,12 @@ namespace TThrough.mvvm.ViewModel
 
         #region Constructores
 
-        public TalkthroughViewModel(ServicioTCP client)
+        public TalkthroughViewModel(ServicioTCP client,string nombreUsuarioConectado)
         {
             Usuarios = new ObservableCollection<Models.Usuario>();
             Mensajes = new ObservableCollection<Models.Mensaje>();
             ChatLineas = new ObservableCollection<VistaMensaje>();
+            UsuarioConectadoActual = nombreUsuarioConectado;
             InicializarServicio(client!);
 
         }
@@ -198,6 +218,16 @@ namespace TThrough.mvvm.ViewModel
             image.StreamSource = ms;
             image.EndInit();
             return image;
+        }
+
+        public void ComprobarSolicitudesPendientes() 
+        {
+            var usuarioConectado = context.Usuarios.SingleOrDefault(x => x.NombreUsuario == UsuarioConectadoActual);
+
+            if (usuarioConectado == null)
+                return;
+
+            SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && x.SolicitudAceptada == false);
         }
 
         #endregion

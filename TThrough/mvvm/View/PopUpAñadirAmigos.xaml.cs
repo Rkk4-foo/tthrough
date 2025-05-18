@@ -24,16 +24,23 @@ namespace TThrough.mvvm.View
     {
 
         #region Propiedades
-        public PopUpAñadirAmigosViewModel PageModel { get; set; } 
+        public PopUpAñadirAmigosViewModel PageModel { get; set; }
 
         #endregion
 
+
+
+        #region Constructores
+
         public PopUpAñadirAmigos(PopUpAñadirAmigosViewModel vm)
         {
-            InitializeComponent();
+            
 
-            DataContext = PageModel =vm;
+            PageModel = vm;
+
+            DataContext = PageModel;
         }
+        #endregion
 
         #region Methods
 

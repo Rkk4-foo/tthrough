@@ -29,22 +29,50 @@ namespace TThrough.mvvm.View
         public TalkThrough(TalkthroughViewModel viewModel) 
         {
             InitializeComponent();
-            TalkthroughViewModel vm = viewModel;
             
-            DataContext = vm;
+
+            
+            DataContext = viewModel;
 
 
-            vm.PopUpAmigosAction = () =>
+            viewModel.PopUpAmigosAction = () =>
             {
-                var popUpViewModel = new PopUpAñadirAmigosViewModel(vm.context);
+
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context,usuarioActual);
 
                 var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
                 
-                popUpViewModel.Usuarios = vm.Usuarios; 
+                popUpViewModel.Usuarios = viewModel.Usuarios; 
 
                 popUpAñadirAmigos.Show();
             };
+
+            viewModel.PopUpSolicitudesAction = () => 
+            {
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual);
+                var popUpSolicitudes = new PopUpSolicitudesPendientes(popUpSolicitudesPendientesVM);
+
+                popUpSolicitudesPendientesVM.ChatCreado = nuevoChat =>
+                {
+                    
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        viewModel.Chats.Add(nuevoChat);
+                    });
+                };
+
+                popUpSolicitudesPendientesVM.CerrarPopupAction = () => popUpSolicitudes.Close();
+
+
+
+                popUpSolicitudes.Show();
+            };
+
         }
+
+
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {

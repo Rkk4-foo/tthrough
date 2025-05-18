@@ -70,7 +70,7 @@ namespace TThrough.mvvm.View
         private void Vm_LoginAsync(object? sender, Usuario e)
         {
             
-            TalkthroughViewModel talkthroughViewModel = new TalkthroughViewModel(pageModel._servicioTCP);
+            TalkthroughViewModel talkthroughViewModel = new TalkthroughViewModel(pageModel._servicioTCP,pageModel.NombreUsuario);
             var panel = new TalkThrough(talkthroughViewModel);
             talkthroughViewModel.Usuarios.Add(e);
             
