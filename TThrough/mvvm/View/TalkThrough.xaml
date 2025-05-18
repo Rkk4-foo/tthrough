@@ -12,6 +12,9 @@
     WindowStyle="None"
     mc:Ignorable="d">
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -111,7 +114,7 @@
                     FontWeight="SemiBold"
                     Foreground="White"
                     Style="{StaticResource AccionesButton}"
-                    Visibility="{Binding SolicitudesPendientes}" />
+                    Visibility="{Binding SolicitudesPendientes, Converter={StaticResource BoolToVis}}" />
             </StackPanel>
 
 
@@ -134,7 +137,11 @@
                             <Image
                                 Width="28"
                                 Height="28"
-                                Source="{Binding NombreChat}" />
+                                Source="{Binding FotoChat}" />
+                            <Label
+                                Content="{Binding NombreChat}"
+                                FontWeight="SemiBold"
+                                Foreground="White" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

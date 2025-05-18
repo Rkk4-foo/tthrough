@@ -16,6 +16,7 @@ using System.Windows.Controls;
 using TThrough.data;
 using TThrough.Entidades;
 using System.Runtime.Intrinsics.X86;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace TThrough.mvvm.ViewModel
@@ -114,11 +115,13 @@ namespace TThrough.mvvm.ViewModel
         public TalkthroughViewModel(ServicioTCP client,string nombreUsuarioConectado)
         {
             Usuarios = new ObservableCollection<Models.Usuario>();
+            Chats = new ObservableCollection<Models.Chats>();
             Mensajes = new ObservableCollection<Models.Mensaje>();
             ChatLineas = new ObservableCollection<VistaMensaje>();
             UsuarioConectadoActual = nombreUsuarioConectado;
             InicializarServicio(client!);
-
+            ComprobarSolicitudesPendientes();
+            CargarChats();
         }
 
 
@@ -153,7 +156,7 @@ namespace TThrough.mvvm.ViewModel
                 };
 
 
-                var UsuarioSender = context.Usuarios.Single(u => u.NombrePublico == this.NombrePublico);
+                var UsuarioSender = context.Usuarios.Single(u => u.NombrePublico == UsuarioConectadoActual);
 
                 
                 ChatLineas.Add(new VistaMensaje
@@ -164,12 +167,12 @@ namespace TThrough.mvvm.ViewModel
                 });
 
 
-                var usuariosDelChat = context.ChatsUsuarios
+                var usuariosChat = context.ChatsUsuarios
                     .Where(cu => cu.IdChat == SelectedItem.IdChat)
                     .Select(cu => cu.IdUsuario)
                     .ToList();
 
-                foreach (var idUsuario in usuariosDelChat)
+                foreach (var idUsuario in usuariosChat)
                 {
                     var mensajeUsuario = new Models.MensajeUsuario
                     {
@@ -227,7 +230,61 @@ namespace TThrough.mvvm.ViewModel
             if (usuarioConectado == null)
                 return;
 
-            SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && x.SolicitudAceptada == false);
+            SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && !x.SolicitudAceptada);
+        }
+
+        public void CargarChats() 
+        {
+            var usuario = context.Usuarios.Single(x=>x.NombreUsuario == UsuarioConectadoActual);
+
+            // Obtener los ID de amigos confirmados
+            var amigosIds = context.Amigos
+                .Where(a =>
+                    (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
+                    && a.SolicitudAceptada)
+                .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
+                .ToList();
+
+            // Obtener los chats donde esté el usuario conectado
+            var chatsUsuario = context.ChatsUsuarios
+                .Where(cu => cu.IdUsuario == usuario.IdUsuario)
+                .Select(cu => cu.IdChat)
+                .ToList();
+
+            // Obtener chats donde esté al menos un amigo también
+            var chatsConAmigos = context.ChatsUsuarios
+                .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
+                .Select(cu => cu.IdChat)
+                .Distinct()
+                .ToList();
+
+            // Cargar los chats completos
+            var chats = context.Chats
+                .Where(c => chatsConAmigos.Contains(c.IdChat))
+                .ToList();
+
+            Chats.Clear(); // Limpia primero, si es necesario
+
+            foreach (var chatId in chatsConAmigos)
+            {
+                var chat = context.Chats.SingleOrDefault(c => c.IdChat == chatId);
+                if (chat != null)
+                {
+                    var otroUsuarioId = context.ChatsUsuarios
+                        .Where(cu => cu.IdChat == chatId && cu.IdUsuario != usuario.IdUsuario)
+                        .Select(cu => cu.IdUsuario)
+                        .FirstOrDefault();
+
+                    var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
+                    if (amigo != null)
+                    {
+                        chat.NombreChat = amigo.NombrePublico;
+                        chat.FotoChat = amigo.FotoPerfil;
+                    }
+
+                    Chats.Add(chat);
+                }
+            }
         }
 
         #endregion

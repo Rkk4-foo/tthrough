@@ -1,18 +1,16 @@
 ﻿<Window
-    x:Class="TThrough.mvvm.View.PopUpAñadirAmigos"
+    x:Class="TThrough.mvvm.View.PopUpCrearGrupos"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:TThrough.mvvm.View"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="PopUpAñadirAmigos"
+    Title="PopUpCrearGrupos"
     Width="400"
     Height="450"
+    Background="Transparent"
     WindowStyle="None"
     mc:Ignorable="d">
-
-
-
     <Border Background="#444444" CornerRadius="20">
 
         <Grid>
@@ -22,35 +20,15 @@
                 <RowDefinition Height="15*" />
             </Grid.RowDefinitions>
 
-            <TextBox
-                Grid.Row="0"
-                Width="300"
-                Margin="10,0,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                HorizontalContentAlignment="Left"
-                VerticalContentAlignment="Center"
-                Style="{StaticResource RoundedTextBox}"
-                Text="{Binding Busqueda}" />
-            <Button
-                Width="40"
-                Height="40"
-                Margin="0,0,20,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                Command="{Binding ComandoBuscar}"
-                Style="{StaticResource RoundedButton}">
 
-                <Image Source="/icons/search.png" />
-            </Button>
+
 
             <ListView
                 Grid.Row="1"
                 Background="Transparent"
                 BorderBrush="Transparent"
-                ItemsSource="{Binding Usuarios}"
-                SelectedItem="{Binding UsuarioSeleccionado}">
+                ItemsSource="{Binding Solicitudes}"
+                SelectedItem="{Binding SolicitudSeleccionada}">
 
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -58,9 +36,9 @@
                             <Image
                                 Width="28"
                                 Height="28"
-                                Source="{Binding FotoPerfil}" />
+                                Source="{Binding FtPerfil}" />
                             <Label
-                                Content="{Binding NombrePublico}"
+                                Content="{Binding NombreUsuario}"
                                 FontSize="24"
                                 FontWeight="SemiBold"
                                 Foreground="White" />
@@ -80,16 +58,16 @@
                     Height="30"
                     Margin="0,0,50,0"
                     Background="#B22222"
-                    Click="Cancelar_Click"
-                    Content="CANCELAR"
+                    Command="{Binding rechazarUser}"
+                    Content="RECHAZAR"
                     Foreground="White"
                     Style="{StaticResource RoundedButton}" />
                 <Button
                     Width="100"
                     Height="30"
                     Background="#FF7043"
-                    Command="{Binding ComandoAñadir}"
-                    Content="AÑADIR"
+                    Command="{Binding añadirUser}"
+                    Content="ACEPTAR"
                     Foreground="White"
                     Style="{StaticResource RoundedButton}" />
             </StackPanel>

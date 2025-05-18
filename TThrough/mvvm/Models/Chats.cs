@@ -17,6 +17,10 @@ namespace TThrough.mvvm.Models
         [Column(TypeName="varchar(40)")]
         public string NombreChat { get; set; }
 
+        [Column(TypeName = "varbinary(max)")]
+
+        public byte[] FotoChat { get; set; }
+
         public DateTime FechaInicioChat { get; set; }
 
 

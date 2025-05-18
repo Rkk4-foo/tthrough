@@ -37,15 +37,12 @@ namespace TThrough.mvvm.View
 
             viewModel.PopUpAmigosAction = () =>
             {
-
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
-                var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context,usuarioActual);
+                var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context, usuarioActual);
 
                 var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
-                
-                popUpViewModel.Usuarios = viewModel.Usuarios; 
 
-                popUpAñadirAmigos.Show();
+                popUpAñadirAmigos.Show(); 
             };
 
             viewModel.PopUpSolicitudesAction = () => 

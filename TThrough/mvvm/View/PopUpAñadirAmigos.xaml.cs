@@ -33,12 +33,10 @@ namespace TThrough.mvvm.View
         #region Constructores
 
         public PopUpAñadirAmigos(PopUpAñadirAmigosViewModel vm)
-        {
-            
+        { 
+            InitializeComponent();
 
-            PageModel = vm;
-
-            DataContext = PageModel;
+            DataContext = PageModel = vm;
         }
         #endregion
 
