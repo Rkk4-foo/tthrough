@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="icons\defaultGroup.png" />
     <None Remove="icons\icondefault.png" />
     <None Remove="icons\search.png" />
     <None Remove="icons\userdefault.png" />
@@ -37,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="icons\defaultGroup.png" />
     <Resource Include="icons\icondefault.png" />
     <Resource Include="icons\search.png" />
   </ItemGroup>

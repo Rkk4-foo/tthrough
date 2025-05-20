@@ -89,24 +89,34 @@ namespace TThrough.mvvm.ViewModel
 
         private void AceptarSolicitud() 
         {
+
+            //Recoge el usuario que manda la solicitud al cliente que está aceptando solicitudes.
             var usuario = _context.Usuarios.Single(x => x.NombreUsuario == SolicitudSeleccionada.NombreUsuario);
+
+            //Modifica el estado de la solicitud a verdadero.
             if (usuario != null) 
             {
-                var solicitud = _context.Amigos.Single(x=>x.IdUsuarioEnvio ==usuario.IdUsuario);
+                
+                var solicitud = _context.Amigos.Single(x=>x.IdUsuarioEnvio ==usuario.IdUsuario && x.IdUsuarioRemitente==_usuarioConectado.IdUsuario);
 
                 solicitud.SolicitudAceptada = true;
 
                 _context.Amigos.Update(solicitud);
+               
             }
 
+
+            //Crea un nuevo chat con el nombre del amigo
             var nuevoChat = new Models.Chats
             {
                 IdChat = Guid.NewGuid().ToString(),
                 NombreChat = usuario.NombrePublico,
+                FotoChat = usuario.FotoPerfil,
+                FechaInicioChat = DateTime.Now,
             };
             _context.Chats.Add(nuevoChat);
 
-            // Añadir a tabla intermedia de usuarios y chats
+            //Crea una entrada en la tabla intermedia de manera que relacione a los dos usuarios con el chat
             _context.ChatsUsuarios.Add(new Models.ChatsUsuarios
             {
                 IdChat = nuevoChat.IdChat,
@@ -116,7 +126,7 @@ namespace TThrough.mvvm.ViewModel
             _context.ChatsUsuarios.Add(new Models.ChatsUsuarios
             {
                 IdChat = nuevoChat.IdChat,
-                IdUsuario = _usuarioConectado.IdUsuario // tú
+                IdUsuario = _usuarioConectado.IdUsuario 
             });
 
             _context.SaveChanges();
@@ -124,6 +134,7 @@ namespace TThrough.mvvm.ViewModel
             
             ChatCreado?.Invoke(nuevoChat);
             Solicitudes.Clear();
+           
             CerrarPopupAction?.Invoke();
         }
 

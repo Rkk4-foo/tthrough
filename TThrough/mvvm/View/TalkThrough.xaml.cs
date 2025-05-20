@@ -26,12 +26,12 @@ namespace TThrough.mvvm.View
             InitializeComponent();
         }
 
-        public TalkThrough(TalkthroughViewModel viewModel) 
+        public TalkThrough(TalkthroughViewModel viewModel)
         {
             InitializeComponent();
-            
 
-            
+
+
             DataContext = viewModel;
 
 
@@ -42,10 +42,10 @@ namespace TThrough.mvvm.View
 
                 var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
 
-                popUpAñadirAmigos.Show(); 
+                popUpAñadirAmigos.Show();
             };
 
-            viewModel.PopUpSolicitudesAction = () => 
+            viewModel.PopUpSolicitudesAction = () =>
             {
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
                 var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual);
@@ -53,7 +53,7 @@ namespace TThrough.mvvm.View
 
                 popUpSolicitudesPendientesVM.ChatCreado = nuevoChat =>
                 {
-                    
+
                     App.Current.Dispatcher.Invoke(() =>
                     {
                         viewModel.Chats.Add(nuevoChat);
@@ -65,6 +65,35 @@ namespace TThrough.mvvm.View
 
 
                 popUpSolicitudes.Show();
+            };
+
+            viewModel.PopUpGruposAction = () =>
+            {
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var popUpGruposVM = new PopUpGruposViewModel(usuarioActual);
+                var popUpGrupos = new PopUpCrearGrupos(popUpGruposVM);
+
+                popUpGruposVM.CerrarPopupAction += () => popUpGrupos.Close();
+
+                popUpGruposVM.ChatCreado = nuevoChat =>
+                {
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        viewModel.Chats.Add(nuevoChat);
+                    });
+                };
+
+                popUpGrupos.Show();
+            };
+
+            viewModel.VentanaConfigAbierta = () =>
+            {
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var configuracionVM = new ConfigViewModel(usuarioActual);
+                var config = new PaginaConfiguracion(configuracionVM);
+
+                config.Show();
+
             };
 
         }

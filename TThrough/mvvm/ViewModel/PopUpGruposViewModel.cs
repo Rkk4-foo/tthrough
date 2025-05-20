@@ -1,0 +1,139 @@
+﻿using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using TThrough.data;
+using System.Windows.Input;
+
+namespace TThrough.mvvm.ViewModel
+{
+    public class PopUpGruposViewModel : ViewModelBase
+    {
+        #region Propiedades
+
+        private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
+
+        public Action? MostrarPantalla;
+
+        public Action? CerrarPopupAction { get; set; }
+
+        public Action<Models.Chats> ChatCreado { get; set; }
+
+        public ObservableCollection<Models.Usuario> UsuariosAmigos { get; set; }
+
+        private List<Models.Usuario> _usuariosSeleccionados { get; set; }
+
+        public List<Models.Usuario> UsuariosSeleccionados
+        {
+            get { return _usuariosSeleccionados; }
+            set { _usuariosSeleccionados = value; OnPropertyChanged(); }
+        }
+
+        private Models.Usuario UsuarioActivo { get; set; }
+
+        private string _nombreGrupo { get; set; }
+
+        public string NombreGrupo
+        {
+            get { return _nombreGrupo; }
+            set { _nombreGrupo = value; OnPropertyChanged(); }
+        }
+
+        public ICommand btnCrear => new RelayCommand(
+            _ => CrearGrupo(),
+            _ => true);
+        #endregion
+
+        #region Constructor
+
+        public PopUpGruposViewModel(Models.Usuario usuario)
+        {
+            UsuariosAmigos = new ObservableCollection<Models.Usuario>();
+
+            UsuarioActivo = usuario;
+            CargarUsuariosAmigos();
+        }
+
+        #endregion
+
+
+        #region Metodos
+
+        private void CargarUsuariosAmigos()
+        {
+            var usuariosAmigos = _context.Amigos
+                                 .Where(a => a.IdUsuarioRemitente == UsuarioActivo.IdUsuario || a.IdUsuarioEnvio == UsuarioActivo.IdUsuario)
+                                 .Select(a => a.IdUsuarioRemitente == UsuarioActivo.IdUsuario ? a.UsuarioPeticion : a.UsuarioRemitente)
+                                 .Distinct()
+                                 .ToList();
+
+            foreach (var usuario in usuariosAmigos)
+            {
+                this.UsuariosAmigos.Add(usuario);
+            }
+        }
+
+        private void CrearGrupo()
+        {
+
+            var imageSource = new BitmapImage(new Uri("pack://application:,,,/TThrough;component/icons/defaultGroup.png"));
+
+
+            if (UsuariosSeleccionados != null)
+            {
+                if (!NombreGrupo.IsNullOrEmpty())
+                {
+
+                    var nuevoChat = new Models.Chats()
+                    {
+                        IdChat = Guid.NewGuid().ToString(),
+                        NombreChat = NombreGrupo,
+                        FotoChat = ConvertImageToBytes(imageSource),
+                        FechaInicioChat = DateTime.Now,
+                    };
+                    _context.Chats.Add(nuevoChat);
+                    _context.ChatsUsuarios.Add(new Models.ChatsUsuarios()
+                    {
+                        IdChat = nuevoChat.IdChat,
+                        IdUsuario = UsuarioActivo.IdUsuario,
+                    });
+                    foreach (var usuario in UsuariosSeleccionados)
+                    {
+
+                        _context.ChatsUsuarios.Add(new Models.ChatsUsuarios()
+                        {
+                            IdChat = nuevoChat.IdChat,
+                            IdUsuario = usuario.IdUsuario,
+                        });
+
+                        
+                        
+                    }
+                    ChatCreado?.Invoke(nuevoChat);
+                    CerrarPopupAction?.Invoke();
+                    _context.SaveChanges();
+                }
+            }
+        }
+
+        public static byte[] ConvertImageToBytes(ImageSource imageSource)
+        {
+            var bitmapSource = imageSource as BitmapSource;
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+
+            using var ms = new MemoryStream();
+            encoder.Save(ms);
+            return ms.ToArray();
+        }
+
+        #endregion
+
+    }
+}

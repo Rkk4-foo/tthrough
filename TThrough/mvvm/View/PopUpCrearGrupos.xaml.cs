@@ -11,6 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using TThrough.mvvm.Models;
+using TThrough.mvvm.ViewModel;
 
 namespace TThrough.mvvm.View
 {
@@ -19,9 +21,33 @@ namespace TThrough.mvvm.View
     /// </summary>
     public partial class PopUpCrearGrupos : Window
     {
+        public PopUpGruposViewModel PageModel { get; set; }
+
         public PopUpCrearGrupos()
         {
             InitializeComponent();
+        }
+
+        public PopUpCrearGrupos(PopUpGruposViewModel vm)
+        {
+            InitializeComponent();
+
+            DataContext = PageModel = vm;
+
+            
+        }
+
+        private void Cancelar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void ListaUsuarios_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is PopUpGruposViewModel gruposVM) 
+            {
+                gruposVM.UsuariosSeleccionados = ListaUsuarios.SelectedItems.Cast<Models.Usuario>().ToList();
+            }
         }
     }
 }

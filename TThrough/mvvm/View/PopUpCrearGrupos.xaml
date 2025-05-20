@@ -20,15 +20,25 @@
                 <RowDefinition Height="15*" />
             </Grid.RowDefinitions>
 
-
+            <TextBox
+                Grid.Row="0"
+                Width="300"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Center"
+                Style="{StaticResource RoundedTextBox}"
+                Text="{Binding NombreGrupo}" />
 
 
             <ListView
+                x:Name="ListaUsuarios"
                 Grid.Row="1"
                 Background="Transparent"
                 BorderBrush="Transparent"
-                ItemsSource="{Binding Solicitudes}"
-                SelectedItem="{Binding SolicitudSeleccionada}">
+                ItemsSource="{Binding UsuariosAmigos}"
+                SelectionChanged="ListaUsuarios_SelectionChanged"
+                SelectionMode="Multiple">
 
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -36,7 +46,7 @@
                             <Image
                                 Width="28"
                                 Height="28"
-                                Source="{Binding FtPerfil}" />
+                                Source="{Binding FotoPerfil}" />
                             <Label
                                 Content="{Binding NombreUsuario}"
                                 FontSize="24"
@@ -58,15 +68,15 @@
                     Height="30"
                     Margin="0,0,50,0"
                     Background="#B22222"
-                    Command="{Binding rechazarUser}"
-                    Content="RECHAZAR"
+                    Click="Cancelar_Click"
+                    Content="CANCELAR"
                     Foreground="White"
                     Style="{StaticResource RoundedButton}" />
                 <Button
                     Width="100"
                     Height="30"
                     Background="#FF7043"
-                    Command="{Binding añadirUser}"
+                    Command="{Binding btnCrear}"
                     Content="ACEPTAR"
                     Foreground="White"
                     Style="{StaticResource RoundedButton}" />

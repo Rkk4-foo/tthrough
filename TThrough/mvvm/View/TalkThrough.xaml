@@ -27,7 +27,10 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Border Grid.ColumnSpan="2" Background="#252525">
+        <Border
+            Grid.ColumnSpan="2"
+            Background="#252525"
+            MouseDown="Border_MouseDown">
             <Grid HorizontalAlignment="Stretch">
                 <Label
                     Content="Talkthrough"
@@ -88,7 +91,7 @@
                 <Button
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{Binding btnAñadirAmigos}"
+                    Command="{Binding BtnAñadirAmigos}"
                     Content="Añadir Amigo"
                     FontFamily="Arial"
                     FontSize="8"
@@ -98,6 +101,7 @@
                 <Button
                     Background="Transparent"
                     BorderBrush="Transparent"
+                    Command="{Binding BtnGrupos}"
                     Content="Añadir Chat"
                     FontFamily="Arial"
                     FontSize="8"
@@ -107,7 +111,7 @@
                 <Button
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{Binding btnSolicitudesPendientes}"
+                    Command="{Binding BtnSolicitudesPendientes}"
                     Content="Solicitudes pendientes"
                     FontFamily="Arial"
                     FontSize="8"
@@ -153,6 +157,7 @@
                 Height="40"
                 VerticalAlignment="Center"
                 Background="#FF7043"
+                Command="{Binding BtnConfig}"
                 Content="CONFIGURACION"
                 FontFamily="Arial"
                 FontWeight="Bold"
@@ -212,7 +217,7 @@
                 Margin="0,0,10,0"
                 HorizontalAlignment="Right"
                 Background="#FF7043"
-                Command="{Binding _enviarCommand}"
+                Command="{Binding EnviarCommand}"
                 Content="Enviar"
                 Foreground="White"
                 Style="{StaticResource RoundedButton}" />

@@ -33,18 +33,28 @@ namespace TThrough.mvvm.ViewModel
 
         public Action? PopUpSolicitudesAction { get; set; }
 
+        public Action? PopUpGruposAction { get; set; }
+        public Action? VentanaConfigAbierta { get; set; }
 
-        public ICommand btnSolicitudesPendientes => new RelayCommand(
+        public ICommand BtnConfig => new RelayCommand(
+            _ => { VentanaConfigAbierta?.Invoke(); },
+            _=> true);
+
+        public ICommand BtnGrupos => new RelayCommand(
+            _ => { PopUpGruposAction?.Invoke(); },
+            _ => true);
+
+        public ICommand BtnSolicitudesPendientes => new RelayCommand(
             _ => { PopUpSolicitudesAction?.Invoke(); },
             _ => true);
 
-        public ICommand btnAñadirAmigos => new RelayCommand(_ =>
+        public ICommand BtnAñadirAmigos => new RelayCommand(_ =>
         {
             PopUpAmigosAction?.Invoke();
         },
         _ =>  true );
         
-        public ICommand _enviarCommand => new RelayCommand(
+        public ICommand EnviarCommand => new RelayCommand(
              _ => EnviarMensaje(),
              _ => !string.IsNullOrWhiteSpace(Mensaje));
 
@@ -237,7 +247,7 @@ namespace TThrough.mvvm.ViewModel
         {
             var usuario = context.Usuarios.Single(x=>x.NombreUsuario == UsuarioConectadoActual);
 
-            // Obtener los ID de amigos confirmados
+            
             var amigosIds = context.Amigos
                 .Where(a =>
                     (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
@@ -245,43 +255,50 @@ namespace TThrough.mvvm.ViewModel
                 .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
                 .ToList();
 
-            // Obtener los chats donde esté el usuario conectado
+            
             var chatsUsuario = context.ChatsUsuarios
                 .Where(cu => cu.IdUsuario == usuario.IdUsuario)
                 .Select(cu => cu.IdChat)
                 .ToList();
 
-            // Obtener chats donde esté al menos un amigo también
+            
             var chatsConAmigos = context.ChatsUsuarios
                 .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
                 .Select(cu => cu.IdChat)
                 .Distinct()
                 .ToList();
 
-            // Cargar los chats completos
+            
             var chats = context.Chats
                 .Where(c => chatsConAmigos.Contains(c.IdChat))
                 .ToList();
 
-            Chats.Clear(); // Limpia primero, si es necesario
+            Chats.Clear(); 
 
             foreach (var chatId in chatsConAmigos)
             {
                 var chat = context.Chats.SingleOrDefault(c => c.IdChat == chatId);
                 if (chat != null)
                 {
-                    var otroUsuarioId = context.ChatsUsuarios
-                        .Where(cu => cu.IdChat == chatId && cu.IdUsuario != usuario.IdUsuario)
+                    var participantes = context.ChatsUsuarios
+                        .Where(cu => cu.IdChat == chatId)
                         .Select(cu => cu.IdUsuario)
-                        .FirstOrDefault();
+                        .ToList();
 
-                    var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
-                    if (amigo != null)
+                    bool esGrupo = participantes.Count > 2;
+
+                    if (!esGrupo)
                     {
-                        chat.NombreChat = amigo.NombrePublico;
-                        chat.FotoChat = amigo.FotoPerfil;
+                        var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
+                        var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
+                        if (amigo != null)
+                        {
+                            chat.NombreChat = amigo.NombrePublico;
+                            chat.FotoChat = amigo.FotoPerfil;
+                        }
                     }
 
+                    // Si es grupo, asumimos que ya tiene nombre y foto asignados
                     Chats.Add(chat);
                 }
             }
