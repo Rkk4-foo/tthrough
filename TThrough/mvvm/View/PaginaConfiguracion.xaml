@@ -72,15 +72,71 @@
 
         <StackPanel Grid.Row="1" Orientation="Vertical">
             <Border
-                Width="150"
-                Height="150"
-                Margin="50"
+                Width="100"
+                Height="100"
+                Margin="20"
                 BorderBrush="White"
                 CornerRadius="75">
                 <Border.Background>
                     <ImageBrush ImageSource="{Binding FotoPerfil}" Stretch="UniformToFill" />
                 </Border.Background>
             </Border>
+            <Button
+                Width="150"
+                Height="30"
+                Background="#FF7043"
+                Click="CambiarImagen_Click"
+                Content="CAMBIAR FOTO DE PERFIL"
+                FontSize="10"
+                Foreground="White"
+                Style="{StaticResource RoundedButton}" />
+            <Label
+                Width="200"
+                Margin="10,10,0,10"
+                Content="Nombre de usuario"
+                FontSize="10"
+                FontWeight="Bold"
+                Foreground="White" />
+            <TextBox
+                Width="200"
+                VerticalContentAlignment="Center"
+                IsEnabled="False"
+                Style="{StaticResource RoundedTextBox}"
+                Text="{Binding NombreUsuario}" />
+            <Label
+                Width="200"
+                Margin="10,10,0,10"
+                Content="Nombre publico"
+                FontSize="10"
+                FontWeight="Bold"
+                Foreground="White" />
+            <TextBox
+                Width="200"
+                VerticalContentAlignment="Center"
+                Style="{StaticResource RoundedTextBox}"
+                Text="{Binding NombrePublico}" />
+            <StackPanel
+                Margin="70"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal">
+                <Button
+                    Width="100"
+                    Height="30"
+                    Margin="0,0,50,0"
+                    Background="#B22222"
+                    Click="Cancelar_Click"
+                    Content="CANCELAR"
+                    Foreground="White"
+                    Style="{StaticResource RoundedButton}" />
+                <Button
+                    Width="100"
+                    Height="30"
+                    Background="#FF7043"
+                    Content="ACEPTAR"
+                    Foreground="White"
+                    Style="{StaticResource RoundedButton}" />
+            </StackPanel>
         </StackPanel>
+
     </Grid>
 </Window>

@@ -19,13 +19,29 @@ namespace TThrough.mvvm.ViewModel
             set { _fotoPerfil = value; OnPropertyChanged(); }
         }
 
-        private Models.Usuario UsuarioConectado { get; set; }
+        private string _nombreUsuario;
+        public string NombreUsuario 
+        {
+            get { return _nombreUsuario; } set { _nombreUsuario = value; OnPropertyChanged(); }
+        }
+
+        private string _nombrePublico;
+
+        public string NombrePublico 
+        {
+            get { return _nombrePublico; } 
+            set { _nombrePublico = value; OnPropertyChanged(); }
+        }
+
+        public Models.Usuario UsuarioConectado { get; set; }
 
         #region Constructores
         public ConfigViewModel(Models.Usuario usuario) 
         {
             UsuarioConectado = usuario;
             FotoPerfil = ConvertBytesToImage(UsuarioConectado.FotoPerfil);
+            NombreUsuario = UsuarioConectado.NombreUsuario;
+            NombrePublico= UsuarioConectado.NombrePublico;
         }
         #endregion
 
@@ -52,7 +68,7 @@ namespace TThrough.mvvm.ViewModel
             return image;
         }
 
-
+        
         #endregion
 
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,6 +44,10 @@ namespace TThrough.mvvm.ViewModel
 
         #region Methods 
 
+        private void Cancelar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
@@ -68,6 +73,28 @@ namespace TThrough.mvvm.ViewModel
             Application.Current.MainWindow.WindowState = WindowState.Minimized;
         }
 
+
         #endregion
+
+        private void CambiarImagen_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Seleccionar imagen de perfil",
+                Filter = "Archivos de imagen|*.jpg;*.jpeg;*.png;*.bmp"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.UriSource = new Uri(openFileDialog.FileName);
+                bitmap.EndInit();
+
+                PageModel.FotoPerfil = bitmap;
+                PageModel.UsuarioConectado.FotoPerfil = ConfigViewModel.ConvertImageToBytes(bitmap);
+            }
+        }
     }
 }
