@@ -6,11 +6,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using TThrough.data;
+using System.Windows.Input;
+using TThrough.Entidades;
 
 namespace TThrough.mvvm.ViewModel
 {
     public class ConfigViewModel : ViewModelBase
     {
+        public Action<Models.Chats>? NotificarColeccion;
+
+        public ICommand EjecutarBuscarArchivo => new RelayCommand(
+            _ => { SeleccionarNuevaFoto(); },
+            _=>true);
+
+        public Action<string>? SeleccionarArchivo;
+
+        private TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
         private ImageSource _fotoPerfil { get; set; }
 
         public ImageSource FotoPerfil
@@ -68,7 +80,53 @@ namespace TThrough.mvvm.ViewModel
             return image;
         }
 
-        
+        public void SeleccionarNuevaFoto() 
+        {
+            SeleccionarArchivo?.Invoke("Seleccionar imagen");
+        }
+
+        public void GuardarCambios() 
+        {
+            bool cambios = false;
+
+            if(UsuarioConectado.NombrePublico != NombrePublico) 
+            {
+                UsuarioConectado.NombrePublico = NombrePublico;
+
+                cambios = true;
+            }
+
+            var ultimaFotoPerfil = _context.Usuarios.Single(x=>x.IdUsuario == UsuarioConectado.IdUsuario).FotoPerfil;
+
+            if (UsuarioConectado.FotoPerfil != ultimaFotoPerfil) 
+            {
+                cambios= true;
+            }
+
+            if (cambios) 
+            {
+                _context.Usuarios.Update(UsuarioConectado);
+                _context.SaveChangesAsync();
+
+                var nuevosDatosPerfil = new
+                {
+                    NombrePublico = UsuarioConectado.NombrePublico,
+                    FotoPerfil = Convert.ToBase64String(UsuarioConectado.FotoPerfil)
+                };
+
+                var mensajeJson = new MensajeJson
+                {
+                    Tipo = "actualizacion_perfil",
+                    Emisor = UsuarioConectado.IdUsuario,
+                    Receptor = null,
+                    ChatId = null, 
+                    Datos = nuevosDatosPerfil
+                };
+            }
+            
+
+
+        }
         #endregion
 
     }

@@ -38,6 +38,8 @@ namespace TThrough.mvvm.ViewModel
             InitializeComponent();
 
             DataContext = PageModel = vm;
+
+            PageModel.SeleccionarArchivo = AbrirDialogoSeleccionImagen;
         }
 
         #endregion
@@ -73,28 +75,27 @@ namespace TThrough.mvvm.ViewModel
             Application.Current.MainWindow.WindowState = WindowState.Minimized;
         }
 
-
-        #endregion
-
-        private void CambiarImagen_Click(object sender, RoutedEventArgs e)
+        private void AbrirDialogoSeleccionImagen(string _) 
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
+            var fileDialog = new OpenFileDialog()
             {
-                Title = "Seleccionar imagen de perfil",
-                Filter = "Archivos de imagen|*.jpg;*.jpeg;*.png;*.bmp"
+                Filter = "*.jpg|*.png"
             };
 
-            if (openFileDialog.ShowDialog() == true)
+            if (fileDialog.ShowDialog() == true) 
             {
-                BitmapImage bitmap = new BitmapImage();
+                var bitmap = new BitmapImage();
                 bitmap.BeginInit();
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.UriSource = new Uri(openFileDialog.FileName);
+                bitmap.UriSource = new Uri(fileDialog.FileName);
                 bitmap.EndInit();
 
                 PageModel.FotoPerfil = bitmap;
                 PageModel.UsuarioConectado.FotoPerfil = ConfigViewModel.ConvertImageToBytes(bitmap);
             }
         }
+        #endregion
+
+        
     }
 }

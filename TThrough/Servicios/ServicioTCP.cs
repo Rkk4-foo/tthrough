@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using TThrough.mvvm.Models;
 
 namespace TThrough.Servicios
 {
@@ -18,6 +20,7 @@ namespace TThrough.Servicios
         private TcpClient _client {  get; set; }
         private NetworkStream _stream;
         public event EventHandler<string> MensajeRecibido;
+
         public event EventHandler<string> MensajeEnviado;
 
         public bool ClienteConectado()
@@ -34,15 +37,16 @@ namespace TThrough.Servicios
             return true;
         }
 
-        public Task EnviarMensaje(string message)
+        public Task EnviarMensaje(string mensaje)
         {
             return Task.Run(() =>
             {
                 if (_stream != null && _client.Connected)
                 {
-                    byte[] data = Encoding.UTF8.GetBytes( ":" + Environment.NewLine + message);
+                    string json = JsonSerializer.Serialize(mensaje);
+                    byte[] data = Encoding.UTF8.GetBytes(json);
                     _stream.Write(data, 0, data.Length);
-                    MensajeEnviado?.Invoke(this, message);
+                    MensajeEnviado?.Invoke(this, json);
                 }
             });
         }

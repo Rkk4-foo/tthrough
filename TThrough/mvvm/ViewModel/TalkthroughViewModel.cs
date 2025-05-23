@@ -17,6 +17,8 @@ using TThrough.data;
 using TThrough.Entidades;
 using System.Runtime.Intrinsics.X86;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using TThrough.mvvm.Models;
 
 
 namespace TThrough.mvvm.ViewModel
@@ -24,6 +26,10 @@ namespace TThrough.mvvm.ViewModel
     public class TalkthroughViewModel : ViewModelBase
     {
         #region Properties
+
+        public static readonly string rutaBase = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"TThrough","MensajesLocales");
+
+        public string rutaGuardadoChat = Path.Combine(rutaBase, $"{chatId}.json");
 
         public readonly TalkthroughContext context = TalkthroughContextFactory.SendContextFactory();
 
@@ -73,6 +79,10 @@ namespace TThrough.mvvm.ViewModel
             set
             {
                 _selectedItem = value;
+
+                ChatLineas.Clear();
+
+                CargarMensajesDeFichero(_selectedItem.IdChat);
                 OnPropertyChanged();
             }
         }
@@ -148,6 +158,30 @@ namespace TThrough.mvvm.ViewModel
             _ = _conexionTCP.RecibirMensajes(CancellationToken.None);
         }
 
+        void GuardarMensajesEnFichero(string chatId, ObservableCollection<VistaMensaje> mensajes)
+        {
+            Directory.CreateDirectory(rutaBase);
+            string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
+            string json = JsonSerializer.Serialize(mensajes);
+            File.WriteAllText(rutaFichero, json);
+        }
+
+        ObservableCollection<VistaMensaje> CargarMensajesDeFichero(string chatId)
+        {
+            string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
+            if (File.Exists(rutaFichero))
+            {
+                string json = File.ReadAllText(rutaFichero);
+                return JsonSerializer.Deserialize<ObservableCollection<VistaMensaje>>(json) ?? new();
+            }
+            return new ObservableCollection<VistaMensaje>();
+        }
+
+        /// <summary>
+        /// Crea un mensaje usando como referencia el modelo de mensaje JSON creado en la carpeta entidades. A partir de ahí, se hacen las comprobaciones pertinentes de IdChat para poder enviarlo a los usuarios
+        /// Posteriormente, los datos se guardan en la bbdd
+        /// 
+        /// </summary>
         private void EnviarMensaje()
         {
             Application.Current.Dispatcher.Invoke(() =>
@@ -168,7 +202,17 @@ namespace TThrough.mvvm.ViewModel
 
                 var UsuarioSender = context.Usuarios.Single(u => u.NombrePublico == UsuarioConectadoActual);
 
-                
+
+                var mensajeJson = new MensajeJson
+                {
+                    Tipo = "mensaje_usuario",
+                    Emisor = UsuarioSender.IdUsuario,
+                    Receptor = null,
+                    ChatId = SelectedItem.IdChat,
+                    Datos = aux
+                };
+
+
                 ChatLineas.Add(new VistaMensaje
                 {
                     NombrePublico = UsuarioSender.NombrePublico,
@@ -192,33 +236,81 @@ namespace TThrough.mvvm.ViewModel
                     context.MensajesUsuarios.Add(mensajeUsuario);
                 }
 
-
+                GuardarMensajesEnFichero(SelectedItem.IdChat, ChatLineas);
                 context.Mensajes.Add(datosMensajes);
                 context.SaveChanges();
 
-
-                _conexionTCP.EnviarMensaje(aux);
+                string mensajeSerializado = JsonSerializer.Serialize(mensajeJson);
+                _conexionTCP.EnviarMensaje(mensajeSerializado);
             });
         }
-        private void EnMensajeRecibido(object? sender, string cuerpoMensaje)
+
+        /// <summary>
+        /// Recoge el mensaje JSON como texto plano, posteriormente se deserializa y se recogen los datos de la clase que se necesiten
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="mensaje"></param>
+        private void EnMensajeRecibido(object? sender, string mensaje)
         {
+            var mensajeJson = JsonSerializer.Deserialize<MensajeJson>(mensaje);
+            if (mensajeJson == null) return;
+
+            var usuarioEmisor = context.Usuarios.Single(x=>x.IdUsuario == mensajeJson.Emisor);
+
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var datosMensajes = new Models.Mensaje()
-                {
-                    FechaEnvio = DateTime.Now,
-                    HoraEnvio = DateTime.Now,
-                    IdMensaje = Guid.NewGuid().ToString().ToLower(),
-                    IdChat = SelectedItem.IdChat,
-                };
+                
 
-                Mensajes.Add(datosMensajes);
-                ChatLineas.Add(new VistaMensaje
+                
+                switch (mensajeJson.Tipo)
                 {
-                    NombrePublico = this.NombrePublico,
-                    CuerpoMensaje = cuerpoMensaje,
-                    FtPerfil = ConvertBytesToImage(Imagen)
-                });
+                    case "mensaje_chat":
+                        string texto = mensajeJson.Datos?.ToString() ?? "";
+                        ChatLineas.Add(new VistaMensaje
+                        {
+                            NombrePublico = NombrePublico,
+                            CuerpoMensaje = texto,
+                            FtPerfil = ObtenerFotoPerfil(usuarioEmisor.IdUsuario)
+                        });
+                        var datosMensajes = new Models.Mensaje()
+                        {
+                            FechaEnvio = DateTime.Now,
+                            HoraEnvio = DateTime.Now,
+                            IdMensaje = Guid.NewGuid().ToString().ToLower(),
+                            IdChat = SelectedItem.IdChat,
+                        };
+                        break;
+
+                    case "actualizacion_perfil":
+                        if (mensajeJson.Datos is JsonElement datos)
+                        {
+                            
+                            string nuevoNombrePublico = datos.GetProperty("NombrePublico").GetString();
+
+                            string fotoPerfilBase64 = datos.GetProperty("FotoPerfil").GetString();
+
+                            byte[] fotoBytes = Convert.FromBase64String(fotoPerfilBase64);
+
+                            // Obtener el usuario a actualizar (esto depende de cómo mantienes la lista de usuarios en tu UI)
+                            var usuario = context.Usuarios.FirstOrDefault(u => u.IdUsuario == mensajeJson.Emisor);
+                            if (usuario != null)
+                            {
+                                usuario.NombrePublico = nuevoNombrePublico;
+                                usuario.FotoPerfil = fotoBytes;
+
+                                context.Usuarios.Update(usuario);
+                                context.SaveChanges();
+
+                               
+                                ActualizarVistaUsuario(usuario);
+                            }
+                        }
+                        break;
+                        
+
+                        
+
+                }
             });
         }
 
@@ -241,6 +333,13 @@ namespace TThrough.mvvm.ViewModel
                 return;
 
             SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && !x.SolicitudAceptada);
+        }
+
+        private ImageSource ObtenerFotoPerfil(string idUser) 
+        {
+            var fotoPerfilUsuario = context.Usuarios.SingleOrDefault(x => x.IdUsuario == idUser).FotoPerfil;
+
+            return ConvertBytesToImage(fotoPerfilUsuario);
         }
 
         public void CargarChats() 
@@ -298,12 +397,24 @@ namespace TThrough.mvvm.ViewModel
                         }
                     }
 
-                    // Si es grupo, asumimos que ya tiene nombre y foto asignados
+                    
                     Chats.Add(chat);
                 }
             }
         }
 
+
+        private void ActualizarVistaUsuario(Usuario usuario)
+        {
+            
+            var item = Usuarios.FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
+            if (item != null)
+            {
+                item.NombrePublico = usuario.NombrePublico;
+                item.FotoPerfil = usuario.FotoPerfil;
+                
+            }
+        }
         #endregion
     }
 }

@@ -85,7 +85,7 @@
                 Width="150"
                 Height="30"
                 Background="#FF7043"
-                Click="CambiarImagen_Click"
+                Command="{Binding EjecutarBuscarArchivo}"
                 Content="CAMBIAR FOTO DE PERFIL"
                 FontSize="10"
                 Foreground="White"
