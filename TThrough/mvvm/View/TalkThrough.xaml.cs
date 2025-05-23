@@ -88,7 +88,7 @@ namespace TThrough.mvvm.View
 
             viewModel.VentanaConfigAbierta = () =>
             {
-                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
                 var configuracionVM = new ConfigViewModel(usuarioActual);
                 var config = new PaginaConfiguracion(configuracionVM);
 
