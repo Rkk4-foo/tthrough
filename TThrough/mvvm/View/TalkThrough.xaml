@@ -178,10 +178,15 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                            <Image
-                                Width="28"
-                                Height="28"
-                                Source="{Binding FtPerfil}" />
+                            <Border
+                                Width="50"
+                                Height="50"
+                                BorderBrush="White"
+                                CornerRadius="75">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding FtPerfil}" Stretch="UniformToFill" />
+                                </Border.Background>
+                            </Border>
 
                             <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
                                 <TextBlock

@@ -25,7 +25,7 @@ namespace TThrough.Servicios
 
         public bool ClienteConectado()
         {
-            _client = new TcpClient("192.168.1.13", 65031);
+            _client = new TcpClient("192.168.1.13", 65030);
             _stream = _client.GetStream();
 
 
