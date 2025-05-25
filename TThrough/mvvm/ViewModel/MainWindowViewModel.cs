@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TThrough.data;
+using TThrough.Entidades;
 using TThrough.mvvm.Models;
 using TThrough.Servicios;
 
@@ -88,7 +90,16 @@ namespace TThrough.mvvm.ViewModel
                 if (resultado && _servicioTCP.ClienteConectado())
                 {
                     LoginAsync?.Invoke(this, user);
-                    
+
+                    var mensajeJson = new MensajeJson
+                    {
+                        Tipo = "identificar",
+                        Emisor = user.IdUsuario.ToString(),
+                    };
+
+                    string json = JsonSerializer.Serialize(mensajeJson);
+
+                    await _servicioTCP.EnviarMensaje(json);
                 }
                 else 
                 {

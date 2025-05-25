@@ -132,6 +132,7 @@
                     Width="100"
                     Height="30"
                     Background="#FF7043"
+                    Command="{Binding GuardarCambiosCommand}"
                     Content="ACEPTAR"
                     Foreground="White"
                     Style="{StaticResource RoundedButton}" />

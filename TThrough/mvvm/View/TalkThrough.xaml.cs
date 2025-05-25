@@ -35,6 +35,14 @@ namespace TThrough.mvvm.View
             DataContext = viewModel;
 
 
+            viewModel.ChatCreado = chatCreado =>
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    viewModel.Chats.Add(chatCreado);
+                });
+            };
+
             viewModel.ChatEliminado = chatAEliminar =>
             {
                 App.Current.Dispatcher.Invoke(() =>
@@ -45,18 +53,20 @@ namespace TThrough.mvvm.View
 
             viewModel.PopUpAmigosAction = () =>
             {
-                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
-                var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context, usuarioActual);
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
+                var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context, usuarioActual,viewModel.conexionTCP);
 
                 var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
+
+                popUpViewModel.CerrarPopup = () => popUpAñadirAmigos.Close();
 
                 popUpAñadirAmigos.Show();
             };
 
             viewModel.PopUpSolicitudesAction = () =>
             {
-                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
-                var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual);
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
+                var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual,viewModel.conexionTCP);
                 var popUpSolicitudes = new PopUpSolicitudesPendientes(popUpSolicitudesPendientesVM);
 
                 popUpSolicitudesPendientesVM.ChatCreado = nuevoChat =>
@@ -77,7 +87,7 @@ namespace TThrough.mvvm.View
 
             viewModel.PopUpGruposAction = () =>
             {
-                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
+                var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
                 var popUpGruposVM = new PopUpGruposViewModel(usuarioActual);
                 var popUpGrupos = new PopUpCrearGrupos(popUpGruposVM);
 
@@ -97,8 +107,10 @@ namespace TThrough.mvvm.View
             viewModel.VentanaConfigAbierta = () =>
             {
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
-                var configuracionVM = new ConfigViewModel(usuarioActual);
+                var configuracionVM = new ConfigViewModel(usuarioActual,viewModel.conexionTCP);
                 var config = new PaginaConfiguracion(configuracionVM);
+
+                configuracionVM.CerrarPopUp = () => config.Close();
 
                 config.Show();
 

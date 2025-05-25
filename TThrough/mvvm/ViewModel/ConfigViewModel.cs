@@ -9,17 +9,25 @@ using System.Windows.Media;
 using TThrough.data;
 using System.Windows.Input;
 using TThrough.Entidades;
+using Microsoft.EntityFrameworkCore;
+using TThrough.Servicios;
+using System.Text.Json;
 
 namespace TThrough.mvvm.ViewModel
 {
     public class ConfigViewModel : ViewModelBase
     {
-        public Action<Models.Chats>? NotificarColeccion;
+        public ServicioTCP tcp;
 
         public ICommand EjecutarBuscarArchivo => new RelayCommand(
             _ => { SeleccionarNuevaFoto(); },
             _=>true);
 
+        public ICommand GuardarCambiosCommand => new RelayCommand(
+            _=> { GuardarCambios(); },
+            _=>true);
+
+        public Action? CerrarPopUp;
         public Action<string>? SeleccionarArchivo;
 
         private TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
@@ -48,12 +56,13 @@ namespace TThrough.mvvm.ViewModel
         public Models.Usuario UsuarioConectado { get; set; }
 
         #region Constructores
-        public ConfigViewModel(Models.Usuario usuario) 
+        public ConfigViewModel(Models.Usuario usuario, ServicioTCP tcp) 
         {
             UsuarioConectado = usuario;
             FotoPerfil = ConvertBytesToImage(UsuarioConectado.FotoPerfil);
             NombreUsuario = UsuarioConectado.NombreUsuario;
             NombrePublico= UsuarioConectado.NombrePublico;
+            this.tcp = tcp;
         }
         #endregion
 
@@ -85,48 +94,53 @@ namespace TThrough.mvvm.ViewModel
             SeleccionarArchivo?.Invoke("Seleccionar imagen");
         }
 
-        public void GuardarCambios() 
+        public async Task GuardarCambios()
         {
             bool cambios = false;
 
-            if(UsuarioConectado.NombrePublico != NombrePublico) 
+            if (UsuarioConectado.NombrePublico != NombrePublico)
             {
                 UsuarioConectado.NombrePublico = NombrePublico;
-
                 cambios = true;
             }
 
-            var ultimaFotoPerfil = _context.Usuarios.Single(x=>x.IdUsuario == UsuarioConectado.IdUsuario).FotoPerfil;
+            var ultimaFotoPerfil = _context.Usuarios
+                .AsNoTracking()
+                .Single(x => x.IdUsuario == UsuarioConectado.IdUsuario)
+                .FotoPerfil;
 
-            if (UsuarioConectado.FotoPerfil != ultimaFotoPerfil) 
+            if (!UsuarioConectado.FotoPerfil.SequenceEqual(ultimaFotoPerfil))
             {
-                cambios= true;
+                cambios = true;
             }
 
-            if (cambios) 
+            if (cambios)
             {
                 _context.Usuarios.Update(UsuarioConectado);
-                _context.SaveChangesAsync();
-
-                var nuevosDatosPerfil = new
-                {
-                    NombrePublico = UsuarioConectado.NombrePublico,
-                    FotoPerfil = Convert.ToBase64String(UsuarioConectado.FotoPerfil)
-                };
+                await _context.SaveChangesAsync();
 
                 var mensajeJson = new MensajeJson
                 {
                     Tipo = "actualizacion_perfil",
                     Emisor = UsuarioConectado.IdUsuario,
                     Receptor = null,
-                    ChatId = null, 
-                    Datos = nuevosDatosPerfil
+                    ChatId = null,
+                    Datos = new
+                    {
+                        NombrePublico = UsuarioConectado.NombrePublico,
+                        
+                        FotoPerfil = Convert.ToBase64String(UsuarioConectado.FotoPerfil)
+                    }
                 };
+
+                string mensaje = JsonSerializer.Serialize(mensajeJson);
+
+                await tcp.EnviarMensaje(mensaje);
+
+                CerrarPopUp?.Invoke();
             }
-            
-
-
         }
+
         #endregion
 
     }

@@ -8,72 +8,113 @@
     Title="PopUpSolicitudesPendientes"
     Width="400"
     Height="450"
-    Background="Transparent"
+    Background="#444444"
     WindowStyle="None"
     mc:Ignorable="d">
 
 
 
-    <Border Background="#444444" CornerRadius="20">
 
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="10*" />
-                <RowDefinition Height="70*" />
-                <RowDefinition Height="15*" />
-            </Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="26" />
+            <RowDefinition Height="70*" />
+            <RowDefinition Height="15*" />
+        </Grid.RowDefinitions>
+
+        <Border Background="#252525" MouseDown="Border_MouseDown">
+            <Grid HorizontalAlignment="Stretch">
+                <Label
+                    Content="SOLICITUDES PENDIENTES"
+                    FontWeight="SemiBold"
+                    Foreground="White" />
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+
+                    <Button
+                        Width="20"
+                        Height="20"
+                        Margin="0,0,0,3"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="Minimizar_Click"
+                        Content="🗕"
+                        FontWeight="Bold"
+                        Foreground="White" />
+
+                    <Button
+                        Width="20"
+                        Height="20"
+                        Margin="0,0,0,2"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="Maximizar_Click"
+                        Content="□"
+                        FontWeight="Bold"
+                        Foreground="White" />
+
+                    <Button
+                        Width="20"
+                        Height="20"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="Cerrar_Click"
+                        Content="🞩"
+                        FontWeight="Bold"
+                        Foreground="White" />
+
+                </StackPanel>
+            </Grid>
+        </Border>
 
 
+        <ListView
+            Grid.Row="1"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            ItemsSource="{Binding Solicitudes}"
+            SelectedItem="{Binding SolicitudSeleccionada}">
 
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Image
+                            Width="28"
+                            Height="28"
+                            Source="{Binding FtPerfil}" />
+                        <Label
+                            Content="{Binding NombreUsuario}"
+                            FontSize="24"
+                            FontWeight="SemiBold"
+                            Foreground="White" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
 
-            <ListView
-                Grid.Row="1"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                ItemsSource="{Binding Solicitudes}"
-                SelectedItem="{Binding SolicitudSeleccionada}">
+        </ListView>
 
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                            <Image
-                                Width="28"
-                                Height="28"
-                                Source="{Binding FtPerfil}" />
-                            <Label
-                                Content="{Binding NombreUsuario}"
-                                FontSize="24"
-                                FontWeight="SemiBold"
-                                Foreground="White" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Orientation=" Horizontal">
+            <Button
+                Width="100"
+                Height="30"
+                Margin="0,0,50,0"
+                Background="#B22222"
+                Command="{Binding rechazarUser}"
+                Content="RECHAZAR"
+                Foreground="White"
+                Style="{StaticResource RoundedButton}" />
+            <Button
+                Width="100"
+                Height="30"
+                Background="#FF7043"
+                Command="{Binding añadirUser}"
+                Content="ACEPTAR"
+                Foreground="White"
+                Style="{StaticResource RoundedButton}" />
+        </StackPanel>
+    </Grid>
 
-            </ListView>
-
-            <StackPanel
-                Grid.Row="2"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Orientation=" Horizontal">
-                <Button
-                    Width="100"
-                    Height="30"
-                    Margin="0,0,50,0"
-                    Background="#B22222"
-                    Command="{Binding rechazarUser}"
-                    Content="RECHAZAR"
-                    Foreground="White"
-                    Style="{StaticResource RoundedButton}" />
-                <Button
-                    Width="100"
-                    Height="30"
-                    Background="#FF7043"
-                    Command="{Binding añadirUser}"
-                    Content="ACEPTAR"
-                    Foreground="White"
-                    Style="{StaticResource RoundedButton}" />
-            </StackPanel>
-        </Grid>
-    </Border>
 </Window>

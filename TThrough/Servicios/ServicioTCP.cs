@@ -77,52 +77,86 @@ namespace TThrough.Servicios
         /// <returns></returns>
         public async Task RecibirMensajes(CancellationToken token)
         {
-            byte[] buffer = new byte[1024];
+            byte[] longitudBytes = new byte[4];
 
-            //Si la cancelación no se ha pedido
-            while (!token.IsCancellationRequested) 
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    // Leer los primeros 4 bytes que representan la longitud (big-endian)
-                    byte[] longitudBytes = new byte[4];
+                    
                     int leidos = await _stream.ReadAsync(longitudBytes, 0, 4, token);
-                    if (leidos < 4) break; // conexión cerrada
+                    if (leidos == 0)
+                    {
+                        Console.WriteLine("[Cliente] Stream cerrado por el servidor.");
+                        break;
+                    }
+
+                    if (leidos < 4)
+                    {
+                        Console.WriteLine($"[Cliente] Error: se leyeron solo {leidos} bytes de longitud.");
+                        continue;
+                    }
 
                     if (BitConverter.IsLittleEndian)
                         Array.Reverse(longitudBytes);
 
                     int longitudMensaje = BitConverter.ToInt32(longitudBytes, 0);
+
                     if (longitudMensaje <= 0 || longitudMensaje > 1_000_000)
                     {
                         Console.WriteLine($"[Cliente] Longitud inválida: {longitudMensaje}");
-                        break;
+                        continue;
                     }
 
                     // Leer el mensaje completo
                     byte[] mensajeBytes = new byte[longitudMensaje];
                     int totalLeido = 0;
+
                     while (totalLeido < longitudMensaje)
                     {
                         int bytesRestantes = longitudMensaje - totalLeido;
-                        int bytesLeidos = await _stream.ReadAsync(
-                            mensajeBytes, totalLeido, bytesRestantes, token);
-                        if (bytesLeidos == 0) break; // conexión cerrada
+                        int bytesLeidos = await _stream.ReadAsync(mensajeBytes, totalLeido, bytesRestantes, token);
+
+                        if (bytesLeidos == 0)
+                        {
+                            Console.WriteLine("[Cliente] Stream cerrado inesperadamente durante lectura de mensaje.");
+                            break;
+                        }
+
                         totalLeido += bytesLeidos;
                     }
 
-                    if (totalLeido < longitudMensaje) break; // error de red
+                    if (totalLeido < longitudMensaje)
+                    {
+                        Console.WriteLine($"[Cliente] Solo se leyeron {totalLeido}/{longitudMensaje} bytes. Se descarta el mensaje.");
+                        continue;
+                    }
 
                     string mensaje = Encoding.UTF8.GetString(mensajeBytes);
                     Console.WriteLine($"[Cliente] Recibido: {mensaje}");
-                    MensajeRecibido?.Invoke(this, mensaje);
+
+                    try
+                    {
+                        MensajeRecibido?.Invoke(this, mensaje);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"[Cliente] Error al procesar el mensaje: {e.Message}");
+                    }
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException))
+                catch (OperationCanceledException)
                 {
-                    Console.WriteLine($"[Cliente] Error: {ex.Message}");
+                    Console.WriteLine("[Cliente] Cancelación solicitada.");
                     break;
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Cliente] Excepción inesperada: {ex.Message}");
+                    await Task.Delay(500); // Esperar antes de reintentar
+                }
             }
+
+            Console.WriteLine("[Cliente] Finalizó la recepción de mensajes.");
         }
     }
 }

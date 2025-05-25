@@ -209,7 +209,7 @@
                                 <TextBlock
                                     FontFamily="Arial"
                                     Foreground="White"
-                                    Text="{Binding NombrePublico}"
+                                    Text="{Binding NombreUsuario}"
                                     TextAlignment="Left" />
                                 <TextBlock
                                     FontFamily="Arial"

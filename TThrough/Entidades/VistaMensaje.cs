@@ -10,7 +10,7 @@ namespace TThrough.Entidades
     public class VistaMensaje
     {
 
-        public string NombrePublico { get; set; }
+        public string NombreUsuario { get; set; }
 
         public string CuerpoMensaje { get; set; }
 

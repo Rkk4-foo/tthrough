@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using TThrough.data;
+using TThrough.Entidades;
 using TThrough.mvvm.Models;
+using TThrough.Servicios;
 
 namespace TThrough.mvvm.ViewModel
 {
@@ -16,8 +19,11 @@ namespace TThrough.mvvm.ViewModel
 
         #region Properties
 
+        private ServicioTCP TCP;
+
         private readonly Usuario _usuarioConectadoLocal;
 
+        public Action? CerrarPopup;
         public ICommand ComandoAñadir => new RelayCommand(
             _ => AñadirAmigo(),
             _ => true);
@@ -27,6 +33,8 @@ namespace TThrough.mvvm.ViewModel
             _ => true);
 
         private TalkthroughContext _context { get; set; }
+
+
 
         private string _textoBusqueda { get; set; }
 
@@ -73,11 +81,12 @@ namespace TThrough.mvvm.ViewModel
 
         #region Constructores
 
-        public PopUpAñadirAmigosViewModel(TalkthroughContext c, Usuario u)
+        public PopUpAñadirAmigosViewModel(TalkthroughContext c, Usuario u,ServicioTCP sTCP)
         {
             Usuarios = new ObservableCollection<Models.Usuario>();
             _context = c;
             _usuarioConectadoLocal = u;
+            TCP = sTCP;
         }
 
         #endregion
@@ -124,9 +133,31 @@ namespace TThrough.mvvm.ViewModel
                 };
 
                 _context.Amigos.Add(peticion);
+
+                EnviarSolicitud();
+
                 _context.SaveChangesAsync();
+                CerrarPopup?.Invoke();
+
             }
         }
+
+
+        private async void EnviarSolicitud() 
+        {
+            var mensaje = new MensajeJson
+            {
+                Tipo = "solicitud_amistad",
+                Emisor = _usuarioConectadoLocal.IdUsuario,
+                Receptor = UsuarioSeleccionado.IdUsuario
+            };
+
+            var json = JsonSerializer.Serialize(mensaje);
+
+            await TCP.EnviarMensaje(json);
+        }
+
+        
         #endregion
 
     }
