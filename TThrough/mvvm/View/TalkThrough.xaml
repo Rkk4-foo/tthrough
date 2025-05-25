@@ -119,6 +119,18 @@
                     Foreground="White"
                     Style="{StaticResource AccionesButton}"
                     Visibility="{Binding SolicitudesPendientes, Converter={StaticResource BoolToVis}}" />
+                <Button
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{Binding btnEliminar}"
+                    Content="Eliminar Amigo"
+                    FontFamily="Arial"
+                    FontSize="8"
+                    FontWeight="SemiBold"
+                    Foreground="White"
+                    Style="{StaticResource AccionesButton}"
+                    Visibility="{Binding AmigoSeleccionado, Converter={StaticResource BoolToVis}}" />
+
             </StackPanel>
 
 
@@ -138,10 +150,15 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="10,5,0,0" Orientation="Horizontal">
-                            <Image
-                                Width="28"
-                                Height="28"
-                                Source="{Binding FotoChat}" />
+                            <Border
+                                Width="50"
+                                Height="50"
+                                BorderBrush="White"
+                                CornerRadius="75">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding FotoChat}" Stretch="UniformToFill" />
+                                </Border.Background>
+                            </Border>
                             <Label
                                 Content="{Binding NombreChat}"
                                 FontWeight="SemiBold"

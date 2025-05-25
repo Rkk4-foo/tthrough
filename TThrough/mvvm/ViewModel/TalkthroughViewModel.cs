@@ -27,13 +27,15 @@ namespace TThrough.mvvm.ViewModel
     {
         #region Properties
 
-        public static readonly string rutaBase = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"TThrough","MensajesLocales");
+        public static readonly string rutaBase = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TThrough", "MensajesLocales");
 
-        
+
 
         public readonly TalkthroughContext context = TalkthroughContextFactory.SendContextFactory();
 
         public readonly string UsuarioConectadoActual;
+
+        public Action<Models.Chats> ChatEliminado;
 
         public Action? PopUpAmigosAction { get; set; }
 
@@ -42,9 +44,13 @@ namespace TThrough.mvvm.ViewModel
         public Action? PopUpGruposAction { get; set; }
         public Action? VentanaConfigAbierta { get; set; }
 
+        public ICommand btnEliminar => new RelayCommand(
+            _ => { EliminarAmigo(); },
+            _ => AmigoSeleccionado);
+
         public ICommand BtnConfig => new RelayCommand(
             _ => { VentanaConfigAbierta?.Invoke(); },
-            _=> true);
+            _ => true);
 
         public ICommand BtnGrupos => new RelayCommand(
             _ => { PopUpGruposAction?.Invoke(); },
@@ -58,15 +64,15 @@ namespace TThrough.mvvm.ViewModel
         {
             PopUpAmigosAction?.Invoke();
         },
-        _ =>  true );
-        
+        _ => true);
+
         public ICommand EnviarCommand => new RelayCommand(
              _ => EnviarMensaje(),
              _ => !string.IsNullOrWhiteSpace(Mensaje));
 
         private ServicioTCP _conexionTCP;
 
-        
+
 
         private Models.Chats _selectedItem { get; set; }
 
@@ -78,18 +84,33 @@ namespace TThrough.mvvm.ViewModel
             }
             set
             {
-                _selectedItem = value;
+                if (_selectedItem != value)
+                {
+                    _selectedItem = value;
 
-                ChatLineas.Clear();
+                    AmigoSeleccionado = _selectedItem != null;
+                    ChatLineas.Clear();
 
-                CargarMensajesDesdeFichero(_selectedItem.IdChat);
-                OnPropertyChanged();
+                    if(_selectedItem != null)
+                        CargarMensajesDesdeFichero(_selectedItem.IdChat);
+
+
+                    OnPropertyChanged();
+                }
             }
         }
 
-        private bool _solicitudesPendientes {  get; set; }
+        private bool _amigoSeleccionado { get; set; }
 
-        public bool SolicitudesPendientes 
+        public bool AmigoSeleccionado
+        {
+            get { return _amigoSeleccionado; }
+            set { _amigoSeleccionado = value; OnPropertyChanged(); }
+        }
+
+        private bool _solicitudesPendientes { get; set; }
+
+        public bool SolicitudesPendientes
         {
             get { return _solicitudesPendientes; }
             set
@@ -132,7 +153,7 @@ namespace TThrough.mvvm.ViewModel
 
         #region Constructores
 
-        public TalkthroughViewModel(ServicioTCP client,string nombreUsuarioConectado)
+        public TalkthroughViewModel(ServicioTCP client, string nombreUsuarioConectado)
         {
             Usuarios = new ObservableCollection<Models.Usuario>();
             Chats = new ObservableCollection<Models.Chats>();
@@ -235,13 +256,13 @@ namespace TThrough.mvvm.ViewModel
                 var aux = Mensaje;
                 Mensaje = "";
 
-                
+
                 var datosMensajes = new Models.Mensaje()
                 {
                     FechaEnvio = DateTime.Now,
                     HoraEnvio = DateTime.Now,
                     IdMensaje = Guid.NewGuid().ToString().ToLower(),
-                    IdChat = SelectedItem.IdChat, 
+                    IdChat = SelectedItem.IdChat,
 
                 };
 
@@ -333,7 +354,7 @@ namespace TThrough.mvvm.ViewModel
                             // Puedes guardar más datos si es necesario
                         };
 
-                        
+
                         context.Mensajes.Add(datosMensajes);
                         context.SaveChanges();
 
@@ -382,7 +403,7 @@ namespace TThrough.mvvm.ViewModel
                 }
             });
         }
-        
+
 
         public static ImageSource ConvertBytesToImage(byte[] bytes)
         {
@@ -395,7 +416,9 @@ namespace TThrough.mvvm.ViewModel
             return image;
         }
 
-        public void ComprobarSolicitudesPendientes() 
+
+
+        public void ComprobarSolicitudesPendientes()
         {
             var usuarioConectado = context.Usuarios.SingleOrDefault(x => x.NombreUsuario == UsuarioConectadoActual);
 
@@ -405,18 +428,18 @@ namespace TThrough.mvvm.ViewModel
             SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && !x.SolicitudAceptada);
         }
 
-        private ImageSource ObtenerFotoPerfil(string idUser) 
+        private ImageSource ObtenerFotoPerfil(string idUser)
         {
             var fotoPerfilUsuario = context.Usuarios.SingleOrDefault(x => x.IdUsuario == idUser).FotoPerfil;
 
             return ConvertBytesToImage(fotoPerfilUsuario);
         }
 
-        public void CargarChats() 
+        public void CargarChats()
         {
-            var usuario = context.Usuarios.Single(x=>x.NombreUsuario == UsuarioConectadoActual);
+            var usuario = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
 
-            
+
             var amigosIds = context.Amigos
                 .Where(a =>
                     (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
@@ -424,25 +447,25 @@ namespace TThrough.mvvm.ViewModel
                 .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
                 .ToList();
 
-            
+
             var chatsUsuario = context.ChatsUsuarios
                 .Where(cu => cu.IdUsuario == usuario.IdUsuario)
                 .Select(cu => cu.IdChat)
                 .ToList();
 
-            
+
             var chatsConAmigos = context.ChatsUsuarios
                 .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
                 .Select(cu => cu.IdChat)
                 .Distinct()
                 .ToList();
 
-            
+
             var chats = context.Chats
                 .Where(c => chatsConAmigos.Contains(c.IdChat))
                 .ToList();
 
-            Chats.Clear(); 
+            Chats.Clear();
 
             foreach (var chatId in chatsConAmigos)
             {
@@ -467,22 +490,64 @@ namespace TThrough.mvvm.ViewModel
                         }
                     }
 
-                    
+
                     Chats.Add(chat);
                 }
             }
         }
 
+        private void EliminarAmigo()
+        {
+            var usuarioConectado = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
 
+            bool EsGrupo = context.ChatsUsuarios.Count(x => x.IdChat == _selectedItem.IdChat) > 2;
+
+            if (EsGrupo)
+            {
+                AmigoSeleccionado = false;
+                return;
+            }
+            else
+            {
+                var otroUsuario = context.ChatsUsuarios.Where(x => x.IdChat == _selectedItem.IdChat && x.IdUsuario != usuarioConectado.IdUsuario)
+                                .Select(x => x.IdUsuario).First();
+
+                var solicitud = context.Amigos.FirstOrDefault(a =>
+                                (a.IdUsuarioEnvio == usuarioConectado.IdUsuario && a.IdUsuarioRemitente == otroUsuario) ||
+                                (a.IdUsuarioEnvio == otroUsuario && a.IdUsuarioRemitente == usuarioConectado.IdUsuario));
+
+                if (solicitud != null)
+                {
+                    context.Amigos.Remove(solicitud);
+                    
+                    
+                }
+                var chatUsuarios = context.ChatsUsuarios.Where(cu => cu.IdChat == _selectedItem.IdChat).ToList();
+                context.ChatsUsuarios.RemoveRange(chatUsuarios);
+
+                var chat = context.Chats.FirstOrDefault(c => c.IdChat == _selectedItem.IdChat);
+                if (chat != null)
+                {
+                    context.Chats.Remove(chat);
+                }
+
+
+                ChatEliminado.Invoke(_selectedItem);
+                context.SaveChanges();
+                AmigoSeleccionado = false;
+            }
+
+
+        }
         private void ActualizarVistaUsuario(Usuario usuario)
         {
-            
+
             var item = Usuarios.FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
             if (item != null)
             {
                 item.NombrePublico = usuario.NombrePublico;
                 item.FotoPerfil = usuario.FotoPerfil;
-                
+
             }
         }
         #endregion

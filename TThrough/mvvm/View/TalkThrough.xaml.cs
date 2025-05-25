@@ -35,6 +35,14 @@ namespace TThrough.mvvm.View
             DataContext = viewModel;
 
 
+            viewModel.ChatEliminado = chatAEliminar =>
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    viewModel.Chats.Remove(chatAEliminar);
+                });
+            };
+
             viewModel.PopUpAmigosAction = () =>
             {
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombrePublico == viewModel.UsuarioConectadoActual);
