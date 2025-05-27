@@ -230,7 +230,8 @@
                 Height="50"
                 HorizontalAlignment="Left"
                 Style="{StaticResource RoundedTextBox}"
-                Text="{Binding Mensaje, UpdateSourceTrigger=PropertyChanged}" />
+                Text="{Binding Mensaje, UpdateSourceTrigger=PropertyChanged}"
+                Visibility="{Binding MostrarComponentes, Converter={StaticResource BoolToVis}}" />
 
             <Button
                 Grid.Row="1"
@@ -242,7 +243,8 @@
                 Command="{Binding EnviarCommand}"
                 Content="Enviar"
                 Foreground="White"
-                Style="{StaticResource RoundedButton}" />
+                Style="{StaticResource RoundedButton}"
+                Visibility="{Binding MostrarComponentes, Converter={StaticResource BoolToVis}}" />
         </Grid>
     </Grid>
 </Window>

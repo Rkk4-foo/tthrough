@@ -47,7 +47,7 @@ namespace TThrough.Servicios
                     byte[] mensajeBytes = Encoding.UTF8.GetBytes(mensaje);
                     int longitud = mensajeBytes.Length;
 
-                    // Convertir a big-endian
+                    
                     byte[] longitudBytes = BitConverter.GetBytes(longitud);
                     if (BitConverter.IsLittleEndian)
                         Array.Reverse(longitudBytes);
@@ -108,7 +108,7 @@ namespace TThrough.Servicios
                         continue;
                     }
 
-                    // Leer el mensaje completo
+                    
                     byte[] mensajeBytes = new byte[longitudMensaje];
                     int totalLeido = 0;
 

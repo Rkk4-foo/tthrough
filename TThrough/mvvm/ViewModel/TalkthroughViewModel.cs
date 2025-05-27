@@ -29,7 +29,13 @@ namespace TThrough.mvvm.ViewModel
 
         public static readonly string rutaBase = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TThrough", "MensajesLocales");
 
+        private bool _mostrarComponentes;
 
+        public bool MostrarComponentes
+        {
+            get { return _mostrarComponentes; }
+            set { _mostrarComponentes = value; OnPropertyChanged(); }
+        }
 
         public readonly TalkthroughContext context = TalkthroughContextFactory.SendContextFactory();
 
@@ -90,12 +96,19 @@ namespace TThrough.mvvm.ViewModel
                 {
                     _selectedItem = value;
 
-                    AmigoSeleccionado = _selectedItem != null;
+                    AmigoSeleccionado = _selectedItem != null && context.ChatsUsuarios.Count(x => x.IdChat == _selectedItem.IdChat) == 2;
                     ChatLineas.Clear();
 
-                    if (_selectedItem != null)
-                        CargarMensajesDesdeFichero(_selectedItem.IdChat);
-
+                    //if (_selectedItem != null)
+                    //CargarMensajesDesdeFichero(_selectedItem.IdChat);
+                    if (_selectedItem == null)
+                    {
+                        MostrarComponentes = false;
+                    }
+                    else
+                    {
+                        MostrarComponentes = true;
+                    }
 
                     OnPropertyChanged();
                 }
@@ -107,7 +120,14 @@ namespace TThrough.mvvm.ViewModel
         public bool AmigoSeleccionado
         {
             get { return _amigoSeleccionado; }
-            set { _amigoSeleccionado = value; OnPropertyChanged(); }
+            set 
+            { 
+                _amigoSeleccionado = value;
+                
+                
+
+                OnPropertyChanged(); 
+            }
         }
 
         private bool _solicitudesPendientes { get; set; }
@@ -182,69 +202,45 @@ namespace TThrough.mvvm.ViewModel
         }
 
 
-        string ConvertImageToBase64(ImageSource imageSource)
-        {
-            if (imageSource is BitmapImage bitmapImage)
-            {
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
 
-                using var ms = new MemoryStream();
-                encoder.Save(ms);
-                return Convert.ToBase64String(ms.ToArray());
-            }
 
-            return null;
-        }
 
-        private ImageSource ConvertBase64ToImage(string base64)
-        {
-            byte[] bytes = Convert.FromBase64String(base64);
-            using var stream = new MemoryStream(bytes);
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.StreamSource = stream;
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
 
-        void GuardarMensajesEnFichero(string chatId, ObservableCollection<VistaMensaje> mensajes)
-        {
-            Directory.CreateDirectory(rutaBase);
-            string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
+        //void GuardarMensajesEnFichero(string chatId, ObservableCollection<VistaMensaje> mensajes)
+        //{
+        //    Directory.CreateDirectory(rutaBase);
+        //    string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
 
-            var mensajesSerializables = mensajes.Select(m => new VistaMensajeSerializable
-            {
-                NombrePublico = m.NombreUsuario,
-                CuerpoMensaje = m.CuerpoMensaje,
-                FtPerfil = ConvertImageToBase64(m.FtPerfil)
-            });
+        //    var mensajesSerializables = mensajes.Select(m => new VistaMensajeSerializable
+        //    {
+        //        NombrePublico = m.NombreUsuario,
+        //        CuerpoMensaje = m.CuerpoMensaje,
+        //        FtPerfil = ConvertBytesToImage(m.FtPerfil)
+        //    });
 
-            string json = JsonSerializer.Serialize(mensajesSerializables, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(rutaFichero, json);
-        }
+        //    string json = JsonSerializer.Serialize(mensajesSerializables, new JsonSerializerOptions { WriteIndented = true });
+        //    File.WriteAllText(rutaFichero, json);
+        //}
 
-        ObservableCollection<VistaMensaje> CargarMensajesDesdeFichero(string chatId)
-        {
-            string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
-            if (!File.Exists(rutaFichero)) return new ObservableCollection<VistaMensaje>();
+        //ObservableCollection<VistaMensaje> CargarMensajesDesdeFichero(string chatId)
+        //{
+        //    string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
+        //    if (!File.Exists(rutaFichero)) return new ObservableCollection<VistaMensaje>();
 
-            var json = File.ReadAllText(rutaFichero);
-            var mensajesSerializables = JsonSerializer.Deserialize<List<VistaMensajeSerializable>>(json);
+        //    var json = File.ReadAllText(rutaFichero);
+        //    var mensajesSerializables = JsonSerializer.Deserialize<List<VistaMensajeSerializable>>(json);
 
-            var mensajes = new ObservableCollection<VistaMensaje>(
-                mensajesSerializables.Select(m => new VistaMensaje
-                {
-                    NombreUsuario = m.NombrePublico,
-                    CuerpoMensaje = m.CuerpoMensaje,
-                    FtPerfil = ConvertBase64ToImage(m.FtPerfil)
-                })
-            );
+        //    var mensajes = new ObservableCollection<VistaMensaje>(
+        //        mensajesSerializables.Select(m => new VistaMensaje
+        //        {
+        //            NombreUsuario = m.NombrePublico,
+        //            CuerpoMensaje = m.CuerpoMensaje,
+        //            FtPerfil = ConvertBase64ToImage(m.FtPerfil)
+        //        })
+        //    );
 
-            return mensajes;
-        }
+        //    return mensajes;
+        //}
 
         /// <summary>
         /// Crea un mensaje usando como referencia el modelo de mensaje JSON creado en la carpeta entidades. A partir de ahí, se hacen las comprobaciones pertinentes de IdChat para poder enviarlo a los usuarios
@@ -305,9 +301,9 @@ namespace TThrough.mvvm.ViewModel
                     context.MensajesUsuarios.Add(mensajeUsuario);
                 }
 
-                GuardarMensajesEnFichero(SelectedItem.IdChat, ChatLineas);
+                //GuardarMensajesEnFichero(SelectedItem.IdChat, ChatLineas);
                 context.Mensajes.Add(datosMensajes);
-                context.SaveChanges();
+                context.SaveChangesAsync();
 
                 string mensajeSerializado = JsonSerializer.Serialize(mensajeJson);
                 _ = conexionTCP.EnviarMensaje(mensajeSerializado);
@@ -338,12 +334,13 @@ namespace TThrough.mvvm.ViewModel
                     case "mensaje_chat":
                         string texto = mensajeJson.Datos?.ToString() ?? "";
 
-                        ChatLineas.Add(new VistaMensaje
-                        {
-                            NombreUsuario = usuarioEmisor.NombreUsuario,
-                            CuerpoMensaje = texto,
-                            FtPerfil = ObtenerFotoPerfil(usuarioEmisor.IdUsuario)
-                        });
+                        if (mensajeJson.ChatId == _selectedItem.IdChat)
+                            ChatLineas.Add(new VistaMensaje
+                            {
+                                NombreUsuario = usuarioEmisor.NombrePublico,
+                                CuerpoMensaje = texto,
+                                FtPerfil = ObtenerFotoPerfil(usuarioEmisor.IdUsuario)
+                            });
 
                         Console.WriteLine("Mensaje de chat recibido");
 
@@ -362,23 +359,7 @@ namespace TThrough.mvvm.ViewModel
                         break;
 
                     case "actualizacion_perfil":
-
-                        if (mensajeJson.Datos is JsonElement element)
-                        {
-                            var nuevoNombre = element.GetProperty("NombrePublico").GetString();
-                            var nuevaFotoBase64 = element.GetProperty("FotoPerfil").GetString();
-
-                            if (!string.IsNullOrWhiteSpace(nuevoNombre))
-                                usuarioEmisor.NombrePublico = nuevoNombre;
-
-                            if (!string.IsNullOrWhiteSpace(nuevaFotoBase64))
-                                usuarioEmisor.FotoPerfil = Convert.FromBase64String(nuevaFotoBase64);
-
-                            context.Usuarios.Update(usuarioEmisor);
-                            context.SaveChanges();
-                        }
-
-                        CargarChats();
+                        ActualizarVistaChats(mensajeJson.Emisor);
                         break;
                     case "solicitud_amistad":
                         ComprobarSolicitudesPendientes();
@@ -387,9 +368,11 @@ namespace TThrough.mvvm.ViewModel
                         CargarChats();
                         break;
                     case "amigo_eliminado":
-
+                        CargarChats();
                         break;
-
+                    case "grupo_creado":
+                        CargarChats();
+                        break;
                     default:
                         Console.WriteLine($"[Advertencia] Tipo de mensaje desconocido: {mensajeJson.Tipo}");
                         break;
@@ -409,6 +392,79 @@ namespace TThrough.mvvm.ViewModel
             return image;
         }
 
+        public void ActualizarVistaChats(string idEmisor)
+        {
+            Chats.Clear();
+
+            using (var context = TalkthroughContextFactory.SendContextFactory())
+            {
+                var usuario = context.Usuarios.Single(u => u.NombreUsuario == UsuarioConectadoActual);
+
+                var amigosIds = context.Amigos
+                    .Where(a =>
+                        (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
+                        && a.SolicitudAceptada)
+                    .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
+                    .ToList();
+
+                var chatsUsuario = context.ChatsUsuarios
+                    .Where(cu => cu.IdUsuario == usuario.IdUsuario)
+                    .Select(cu => cu.IdChat)
+                    .ToList();
+
+                var chatsConAmigos = context.ChatsUsuarios
+                    .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
+                    .Select(cu => cu.IdChat)
+                    .Distinct()
+                    .ToList();
+
+                var chats = context.Chats
+                    .Where(c => chatsConAmigos.Contains(c.IdChat))
+                    .ToList();
+
+                foreach (var chatId in chatsConAmigos)
+                {
+                    var chat = chats.SingleOrDefault(c => c.IdChat == chatId);
+                    if (chat != null)
+                    {
+                        var participantes = context.ChatsUsuarios
+                            .Where(cu => cu.IdChat == chatId)
+                            .Select(cu => cu.IdUsuario)
+                            .ToList();
+
+                        bool esGrupo = participantes.Count > 2;
+
+                        if (!esGrupo)
+                        {
+                            var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
+                            var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
+                            if (amigo != null)
+                            {
+                                chat.NombreChat = amigo.NombrePublico;
+                                chat.FotoChat = amigo.FotoPerfil;
+                            }
+                        }
+
+                        Chats.Add(chat);
+
+                    }
+                }
+                ActualizarMensajesDelChatActivo(idEmisor);
+            }
+        }
+        public void ActualizarMensajesDelChatActivo(string IdEmisor)
+        {
+            var usuario = context.Usuarios.Single(x => x.IdUsuario == IdEmisor);
+
+            if (usuario == null)
+                return;
+
+            foreach (var linea in ChatLineas.Where(l => l.NombreUsuario == usuario.NombreUsuario))
+            {
+                linea.NombreUsuario = usuario.NombrePublico;
+                linea.FtPerfil = ConvertBytesToImage(usuario.FotoPerfil);
+            }
+        }
 
 
         public void ComprobarSolicitudesPendientes()
@@ -430,43 +486,26 @@ namespace TThrough.mvvm.ViewModel
 
         public void CargarChats()
         {
-            var usuario = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
-
-
-            var amigosIds = context.Amigos
-                .Where(a =>
-                    (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
-                    && a.SolicitudAceptada)
-                .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
-                .ToList();
-
-
-            var chatsUsuario = context.ChatsUsuarios
-                .Where(cu => cu.IdUsuario == usuario.IdUsuario)
-                .Select(cu => cu.IdChat)
-                .ToList();
-
-
-            var chatsConAmigos = context.ChatsUsuarios
-                .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
-                .Select(cu => cu.IdChat)
-                .Distinct()
-                .ToList();
-
-
-            var chats = context.Chats
-                .Where(c => chatsConAmigos.Contains(c.IdChat))
-                .ToList();
-
             Chats.Clear();
 
-            foreach (var chatId in chatsConAmigos)
+            using (var context = TalkthroughContextFactory.SendContextFactory())
             {
-                var chat = context.Chats.SingleOrDefault(c => c.IdChat == chatId);
-                if (chat != null)
+                var usuario = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
+
+                
+                var chatsUsuarioIds = context.ChatsUsuarios
+                    .Where(cu => cu.IdUsuario == usuario.IdUsuario)
+                    .Select(cu => cu.IdChat)
+                    .ToList();
+
+                var chats = context.Chats
+                    .Where(c => chatsUsuarioIds.Contains(c.IdChat))
+                    .ToList();
+
+                foreach (var chat in chats)
                 {
                     var participantes = context.ChatsUsuarios
-                        .Where(cu => cu.IdChat == chatId)
+                        .Where(cu => cu.IdChat == chat.IdChat)
                         .Select(cu => cu.IdUsuario)
                         .ToList();
 
@@ -483,16 +522,16 @@ namespace TThrough.mvvm.ViewModel
                         }
                     }
 
-
                     Chats.Add(chat);
                 }
             }
         }
 
+
         /// <summary>
         /// Elimina el registro de la base de datos para acabar con la solicitud de amistad. El usuario desaparece de los chats del usuario conectado.
         /// </summary>
-        private async void EliminarAmigo()
+        private void EliminarAmigo()
         {
             var usuarioConectado = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
 
@@ -527,18 +566,36 @@ namespace TThrough.mvvm.ViewModel
                     var chat = context.Chats.FirstOrDefault(c => c.IdChat == _selectedItem.IdChat);
                     if (chat != null)
                     {
+
+                        var participantes = context.ChatsUsuarios
+                        .Where(cu => cu.IdChat == chat.IdChat)
+                        .Select(cu => cu.IdUsuario)
+                        .ToList();
+
+                        
+                        
                         context.Chats.Remove(chat);
+                        //var mensajeJson = new MensajeJson
+                        //{
+                        //    Tipo = "amigo_eliminado",
+                        //    Emisor = usuarioConectado.IdUsuario,
+                        //    Receptor = otroUsuario,
+                        //    ChatId = chat.IdChat
+                        //};
+
+                        //string msj = JsonSerializer.Serialize(mensajeJson);
+
+                        //await conexionTCP.EnviarMensaje(msj);
                     }
+
                 }
-
-
                 ChatEliminado.Invoke(_selectedItem);
                 AmigoSeleccionado = false;
             }
 
 
         }
-        
+
         #endregion
     }
 }

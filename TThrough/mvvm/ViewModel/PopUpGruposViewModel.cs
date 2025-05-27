@@ -10,12 +10,17 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using TThrough.data;
 using System.Windows.Input;
+using TThrough.Servicios;
+using TThrough.Entidades;
+using System.Text.Json;
 
 namespace TThrough.mvvm.ViewModel
 {
     public class PopUpGruposViewModel : ViewModelBase
     {
         #region Propiedades
+
+        private readonly ServicioTCP tcp;
 
         private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
 
@@ -46,18 +51,19 @@ namespace TThrough.mvvm.ViewModel
         }
 
         public ICommand btnCrear => new RelayCommand(
-            _ => CrearGrupo(),
+            _ => CrearGrupoAsync(),
             _ => true);
         #endregion
 
         #region Constructor
 
-        public PopUpGruposViewModel(Models.Usuario usuario)
+        public PopUpGruposViewModel(Models.Usuario usuario, ServicioTCP tcp)
         {
             UsuariosAmigos = new ObservableCollection<Models.Usuario>();
 
             UsuarioActivo = usuario;
             CargarUsuariosAmigos();
+            this.tcp = tcp;
         }
 
         #endregion
@@ -65,7 +71,7 @@ namespace TThrough.mvvm.ViewModel
 
         #region Metodos
 
-        private void CargarUsuariosAmigos()
+        private async void CargarUsuariosAmigos()
         {
             var usuariosAmigos = _context.Amigos
                                  .Where(a => a.IdUsuarioRemitente == UsuarioActivo.IdUsuario || a.IdUsuarioEnvio == UsuarioActivo.IdUsuario)
@@ -79,7 +85,7 @@ namespace TThrough.mvvm.ViewModel
             }
         }
 
-        private void CrearGrupo()
+        private async Task CrearGrupoAsync()
         {
 
             var imageSource = new BitmapImage(new Uri("pack://application:,,,/TThrough;component/icons/defaultGroup.png"));
@@ -110,11 +116,19 @@ namespace TThrough.mvvm.ViewModel
                         {
                             IdChat = nuevoChat.IdChat,
                             IdUsuario = usuario.IdUsuario,
-                        });
-
-                        
-                        
+                        });   
                     }
+
+                    var mensajeJson = new MensajeJson 
+                    {
+                        Tipo = "grupo_creado",
+                        Emisor = UsuarioActivo.IdUsuario,
+                        ChatId = nuevoChat.IdChat,
+                    };
+
+                    string json = JsonSerializer.Serialize(mensajeJson);
+                    await tcp.EnviarMensaje(json);
+
                     ChatCreado?.Invoke(nuevoChat);
                     CerrarPopupAction?.Invoke();
                     _context.SaveChanges();

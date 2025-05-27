@@ -23,9 +23,8 @@ namespace TThrough.mvvm.ViewModel
             _ => { SeleccionarNuevaFoto(); },
             _=>true);
 
-        public ICommand GuardarCambiosCommand => new RelayCommand(
-            _=> { GuardarCambios(); },
-            _=>true);
+        public ICommand GuardarCambiosCommand => new AsyncRelayCommand(GuardarCambios);
+            
 
         public Action? CerrarPopUp;
         public Action<string>? SeleccionarArchivo;
@@ -109,7 +108,10 @@ namespace TThrough.mvvm.ViewModel
                 .Single(x => x.IdUsuario == UsuarioConectado.IdUsuario)
                 .FotoPerfil;
 
-            if (!UsuarioConectado.FotoPerfil.SequenceEqual(ultimaFotoPerfil))
+            var actualFoto = UsuarioConectado.FotoPerfil ?? Array.Empty<byte>();
+            var ultimaFoto = ultimaFotoPerfil ?? Array.Empty<byte>();
+
+            if (!actualFoto.SequenceEqual(ultimaFoto))
             {
                 cambios = true;
             }
@@ -123,14 +125,7 @@ namespace TThrough.mvvm.ViewModel
                 {
                     Tipo = "actualizacion_perfil",
                     Emisor = UsuarioConectado.IdUsuario,
-                    Receptor = null,
-                    ChatId = null,
-                    Datos = new
-                    {
-                        NombrePublico = UsuarioConectado.NombrePublico,
-                        
-                        FotoPerfil = Convert.ToBase64String(UsuarioConectado.FotoPerfil)
-                    }
+                    Receptor = null
                 };
 
                 string mensaje = JsonSerializer.Serialize(mensajeJson);

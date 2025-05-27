@@ -69,6 +69,11 @@ namespace TThrough.mvvm.View
                 var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual,viewModel.conexionTCP);
                 var popUpSolicitudes = new PopUpSolicitudesPendientes(popUpSolicitudesPendientesVM);
 
+                popUpSolicitudesPendientesVM.SolicitudAceptada = () =>
+                {
+                    viewModel.ComprobarSolicitudesPendientes();
+                };
+
                 popUpSolicitudesPendientesVM.ChatCreado = nuevoChat =>
                 {
 
@@ -88,7 +93,7 @@ namespace TThrough.mvvm.View
             viewModel.PopUpGruposAction = () =>
             {
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
-                var popUpGruposVM = new PopUpGruposViewModel(usuarioActual);
+                var popUpGruposVM = new PopUpGruposViewModel(usuarioActual,viewModel.conexionTCP);
                 var popUpGrupos = new PopUpCrearGrupos(popUpGruposVM);
 
                 popUpGruposVM.CerrarPopupAction += () => popUpGrupos.Close();

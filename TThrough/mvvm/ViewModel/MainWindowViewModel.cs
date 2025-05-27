@@ -70,8 +70,6 @@ namespace TThrough.mvvm.ViewModel
             _usuarios = new ObservableCollection<Usuario>();
             ComandoRegistro = new AsyncRelayCommand(RegistrarUsuario);
             ComandoLogin = new AsyncRelayCommand(LoginCorrecto);
-
-            
         }
 
         #endregion

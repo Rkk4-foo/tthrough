@@ -22,6 +22,8 @@ namespace TThrough.mvvm.ViewModel
 
         private Models.Usuario _usuarioConectado;
 
+
+        public Action? SolicitudAceptada;
         public Action<Models.Chats> ChatCreado { get; set; }
 
         public ICommand añadirUser => new RelayCommand(
@@ -64,7 +66,7 @@ namespace TThrough.mvvm.ViewModel
         {
             Solicitudes.Clear();
 
-            var listaSolicitudes = _context.Amigos.Where(x => x.IdUsuarioRemitente == _usuarioConectado.IdUsuario).Select(x => x.UsuarioPeticion).ToList();
+            var listaSolicitudes = _context.Amigos.Where(x => x.IdUsuarioRemitente == _usuarioConectado.IdUsuario && !x.SolicitudAceptada).Select(x => x.UsuarioPeticion).ToList();
 
             foreach (var usuario in listaSolicitudes)
             {
@@ -130,6 +132,7 @@ namespace TThrough.mvvm.ViewModel
             ChatCreado?.Invoke(nuevoChat);
             AceptarSolicitud(usuario,nuevoChat);
             Solicitudes.Remove(SolicitudSeleccionada);
+
             if (!Solicitudes.Any())
                 CerrarPopupAction?.Invoke();
         }
@@ -151,6 +154,8 @@ namespace TThrough.mvvm.ViewModel
                 Receptor = usuarioSeleccionado.IdUsuario,
                 Datos = chatEnviar,
             };
+
+            SolicitudAceptada?.Invoke();
 
             var json = JsonSerializer.Serialize(mensaje);
 
