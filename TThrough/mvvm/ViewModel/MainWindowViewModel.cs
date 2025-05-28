@@ -27,7 +27,7 @@ namespace TThrough.mvvm.ViewModel
 
         #region Propiedades
 
-        
+
 
         private readonly TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
 
@@ -63,7 +63,7 @@ namespace TThrough.mvvm.ViewModel
 
         #region Constructores
 
-        public MainWindowViewModel() 
+        public MainWindowViewModel()
         {
             _dialog = new ServicioDialogo();
             _servicioTCP = new Servicios.ServicioTCP();
@@ -77,38 +77,44 @@ namespace TThrough.mvvm.ViewModel
 
         #region Metodos
 
-        private async Task LoginCorrecto() 
+
+        /// <summary>
+        /// Notifica al servidor en caso de que el usuario se haya podido conectar correctamente al servidor
+        /// </summary>
+        /// <returns></returns>
+        private async Task LoginCorrecto()
         {
-            using (var context = TalkthroughContextFactory.SendContextFactory())
+
+            bool resultado = await VerificarCredenciales(_context, NombreUsuario, Contrasena);
+
+            Usuario user = await ObtenerUsuario(_context, NombreUsuario);
+
+            if (resultado && _servicioTCP.ClienteConectado())
             {
-                bool resultado = await VerificarCredenciales(context, NombreUsuario, Contrasena);
+                LoginAsync?.Invoke(this, user);
 
-                Usuario user = await ObtenerUsuario(context,NombreUsuario);
-
-                if (resultado && _servicioTCP.ClienteConectado())
+                var mensajeJson = new MensajeJson
                 {
-                    LoginAsync?.Invoke(this, user);
+                    Tipo = "identificar",
+                    Emisor = user.IdUsuario.ToString(),
+                };
 
-                    var mensajeJson = new MensajeJson
-                    {
-                        Tipo = "identificar",
-                        Emisor = user.IdUsuario.ToString(),
-                    };
+                string json = JsonSerializer.Serialize(mensajeJson);
 
-                    string json = JsonSerializer.Serialize(mensajeJson);
-
-                    await _servicioTCP.EnviarMensaje(json);
-                }
-                else 
-                {
-                    _dialog.MostrarDialogo("ERROR","No se pudo contectar al servidor");
-                }
+                await _servicioTCP.EnviarMensaje(json);
             }
+            else
+            {
+                _dialog.MostrarDialogo("ERROR", "No se pudo contectar al servidor");
+            }
+
         }
 
-        
-
-
+        /// <summary>
+        /// Metodo utilizado para guardar la imagen de perfil por defecto en la BBDD convirtiendola a Bytes.
+        /// </summary>
+        /// <param name="imageSource"></param>
+        /// <returns></returns>
         public static byte[] ConvertImageToBytes(ImageSource imageSource)
         {
             var bitmapSource = imageSource as BitmapSource;
@@ -120,25 +126,39 @@ namespace TThrough.mvvm.ViewModel
             return ms.ToArray();
         }
 
-        private async Task<Usuario> ObtenerUsuario(TalkthroughContext context, string Username) 
+        /// <summary>
+        /// Trata de obtener el usuario de la BBDD para saber si existe o no.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="Username"></param>
+        /// <returns></returns>
+        private async Task<Usuario> ObtenerUsuario(TalkthroughContext context, string Username)
         {
             return await context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == Username);
         }
 
-        private async Task<bool> VerificarCredenciales(TalkthroughContext context,string Username,string pass) 
-        { 
+
+        /// <summary>
+        /// Verifica que si el usuario existe la contraseña introducida coincide con la contaseña codificada guardada en la BBDD
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="Username"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        private async Task<bool> VerificarCredenciales(TalkthroughContext context, string Username, string pass)
+        {
             Usuario usuario = await context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == Username);
 
             if (usuario == null) return false;
 
-            PasswordVerificationResult resultado = new PasswordHasher<Usuario>().VerifyHashedPassword(usuario,usuario.Contrasena, pass);
+            PasswordVerificationResult resultado = new PasswordHasher<Usuario>().VerifyHashedPassword(usuario, usuario.Contrasena, pass);
 
             return resultado == PasswordVerificationResult.Success;
-        } 
+        }
 
-        private async Task RegistrarUsuario() 
+        private async Task RegistrarUsuario()
         {
-            if (await ExisteUsuario(NombreUsuario)) 
+            if (await ExisteUsuario(NombreUsuario))
             {
                 MessageBox.Show("El usuario ya existe");
                 return;
@@ -158,7 +178,7 @@ namespace TThrough.mvvm.ViewModel
 
             //Crea un hash para la contraseña automáticamente de manera que se guarda de forma segura.
 
-            NuevoUsuario.Contrasena = new PasswordHasher<Usuario>().HashPassword(NuevoUsuario,this.Contrasena);
+            NuevoUsuario.Contrasena = new PasswordHasher<Usuario>().HashPassword(NuevoUsuario, this.Contrasena);
 
             _context.Usuarios.Add(NuevoUsuario);
             await _context.SaveChangesAsync();
@@ -167,7 +187,8 @@ namespace TThrough.mvvm.ViewModel
             MessageBox.Show("Usuario añadido correctamente");
         }
 
-        private async Task<bool> ExisteUsuario(string NombreUsuario) 
+        //Revisa que exista el usuario
+        private async Task<bool> ExisteUsuario(string NombreUsuario)
         {
             return await _context.Usuarios.AnyAsync(u => u.NombreUsuario == NombreUsuario);
         }

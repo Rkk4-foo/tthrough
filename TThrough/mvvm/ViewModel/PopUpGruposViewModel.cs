@@ -71,6 +71,10 @@ namespace TThrough.mvvm.ViewModel
 
         #region Metodos
 
+
+        /// <summary>
+        /// Guarda en la colección observable aquellos usuarios que sean amigos del usuario que crea el grupo
+        /// </summary>
         private async void CargarUsuariosAmigos()
         {
             var usuariosAmigos = _context.Amigos
@@ -85,6 +89,13 @@ namespace TThrough.mvvm.ViewModel
             }
         }
 
+
+        /// <summary>
+        /// Método usado para crear el nuevo grupo.
+        /// Para ello, recoge a los usuarios seleccionados y los introduce en una nueva entidad para almacenarla en la BBDD
+        /// Posteriormente, recoge todos los elementos de la lista de Usuarios seleccionados para añadirlos a la BBDD en la tabla intermedia
+        /// </summary>
+        /// <returns></returns>
         private async Task CrearGrupoAsync()
         {
 
@@ -119,6 +130,8 @@ namespace TThrough.mvvm.ViewModel
                         });   
                     }
 
+
+                    //Notifica al resto de miembros que el grupo ha sido creado.
                     var mensajeJson = new MensajeJson 
                     {
                         Tipo = "grupo_creado",

@@ -96,14 +96,15 @@ namespace TThrough.mvvm.ViewModel
                 {
                     _selectedItem = value;
 
+
+                    //El booleano pasa a verdadero cuando el usuario ha seleccionado un chat de la lista y este contiene 2 usuarios (Mas usuarios son un grupo)
                     AmigoSeleccionado = _selectedItem != null && context.ChatsUsuarios.Count(x => x.IdChat == _selectedItem.IdChat) == 2;
                     ChatLineas.Clear();
 
-                    //if (_selectedItem != null)
-                    //CargarMensajesDesdeFichero(_selectedItem.IdChat);
+
                     if (_selectedItem == null)
                     {
-                        MostrarComponentes = false;
+                        MostrarComponentes = false; // Evita que se muestren componentes como la barra para escribir un mensaje o el botón de enviar cuando no se seleccione un chat
                     }
                     else
                     {
@@ -120,13 +121,13 @@ namespace TThrough.mvvm.ViewModel
         public bool AmigoSeleccionado
         {
             get { return _amigoSeleccionado; }
-            set 
-            { 
+            set
+            {
                 _amigoSeleccionado = value;
-                
-                
 
-                OnPropertyChanged(); 
+
+
+                OnPropertyChanged();
             }
         }
 
@@ -192,6 +193,10 @@ namespace TThrough.mvvm.ViewModel
 
         #region Methods
 
+        /// <summary>
+        /// Inicializa el servicio TCP situado en Tthrough/Servicios
+        /// </summary>
+        /// <param name="tcp"></param>
         public void InicializarServicio(ServicioTCP tcp)
         {
             conexionTCP = tcp;
@@ -200,47 +205,6 @@ namespace TThrough.mvvm.ViewModel
 
             _ = conexionTCP.RecibirMensajes(CancellationToken.None);
         }
-
-
-
-
-
-
-        //void GuardarMensajesEnFichero(string chatId, ObservableCollection<VistaMensaje> mensajes)
-        //{
-        //    Directory.CreateDirectory(rutaBase);
-        //    string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
-
-        //    var mensajesSerializables = mensajes.Select(m => new VistaMensajeSerializable
-        //    {
-        //        NombrePublico = m.NombreUsuario,
-        //        CuerpoMensaje = m.CuerpoMensaje,
-        //        FtPerfil = ConvertBytesToImage(m.FtPerfil)
-        //    });
-
-        //    string json = JsonSerializer.Serialize(mensajesSerializables, new JsonSerializerOptions { WriteIndented = true });
-        //    File.WriteAllText(rutaFichero, json);
-        //}
-
-        //ObservableCollection<VistaMensaje> CargarMensajesDesdeFichero(string chatId)
-        //{
-        //    string rutaFichero = Path.Combine(rutaBase, $"{chatId}.json");
-        //    if (!File.Exists(rutaFichero)) return new ObservableCollection<VistaMensaje>();
-
-        //    var json = File.ReadAllText(rutaFichero);
-        //    var mensajesSerializables = JsonSerializer.Deserialize<List<VistaMensajeSerializable>>(json);
-
-        //    var mensajes = new ObservableCollection<VistaMensaje>(
-        //        mensajesSerializables.Select(m => new VistaMensaje
-        //        {
-        //            NombreUsuario = m.NombrePublico,
-        //            CuerpoMensaje = m.CuerpoMensaje,
-        //            FtPerfil = ConvertBase64ToImage(m.FtPerfil)
-        //        })
-        //    );
-
-        //    return mensajes;
-        //}
 
         /// <summary>
         /// Crea un mensaje usando como referencia el modelo de mensaje JSON creado en la carpeta entidades. A partir de ahí, se hacen las comprobaciones pertinentes de IdChat para poder enviarlo a los usuarios
@@ -254,7 +218,7 @@ namespace TThrough.mvvm.ViewModel
                 var aux = Mensaje;
                 Mensaje = "";
 
-
+                //Se guardan los datos en un modelo para introducirlo en la BBDD
                 var datosMensajes = new Models.Mensaje()
                 {
                     FechaEnvio = DateTime.Now,
@@ -280,7 +244,7 @@ namespace TThrough.mvvm.ViewModel
 
                 ChatLineas.Add(new VistaMensaje
                 {
-                    NombreUsuario = UsuarioSender.NombreUsuario,
+                    NombreUsuario = UsuarioSender.NombrePublico,
                     CuerpoMensaje = aux,
                     FtPerfil = ConvertBytesToImage(UsuarioSender.FotoPerfil)
                 });
@@ -301,7 +265,7 @@ namespace TThrough.mvvm.ViewModel
                     context.MensajesUsuarios.Add(mensajeUsuario);
                 }
 
-                //GuardarMensajesEnFichero(SelectedItem.IdChat, ChatLineas);
+
                 context.Mensajes.Add(datosMensajes);
                 context.SaveChangesAsync();
 
@@ -321,10 +285,11 @@ namespace TThrough.mvvm.ViewModel
             if (mensajeJson == null) return;
 
             var usuarioEmisor = context.Usuarios.SingleOrDefault(x => x.IdUsuario == mensajeJson.Emisor);
+
+            //Si el usuario es nulo, no devuelve nada para que no salte excepción
             if (usuarioEmisor == null)
             {
-                Console.WriteLine($"[Advertencia] Usuario con ID '{mensajeJson.Emisor}' no encontrado en contexto.");
-                return; // Salir para evitar null reference
+                return;
             }
 
             Application.Current.Dispatcher.Invoke(() =>
@@ -380,78 +345,107 @@ namespace TThrough.mvvm.ViewModel
             });
         }
 
-
+        /// <summary>
+        /// Convierte los bytes que se pasan como parametro en una imagen.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
         public static ImageSource ConvertBytesToImage(byte[] bytes)
         {
-            using var ms = new MemoryStream(bytes);
+            using var ms = new MemoryStream(bytes); // Se crea un stream con los bytes a utilizar (recuperados de la base de datos)
             var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
+
+
+            image.BeginInit(); // Inicializa la imagen Bitmap
+            image.CacheOption = BitmapCacheOption.OnLoad; // Se permite que la imagen aproveche la caché del equipo y guarde en caché la imagen nada más cargar
             image.StreamSource = ms;
             image.EndInit();
             return image;
         }
 
+
+        /// <summary>
+        /// Se recibe el emisor de la actualizacion del perfil a partir del mensaje JSON y fuerza una recarga de la aplicación
+        /// </summary>
+        /// <param name="idEmisor"></param>
         public void ActualizarVistaChats(string idEmisor)
         {
             Chats.Clear();
 
-            using (var context = TalkthroughContextFactory.SendContextFactory())
+            var usuario = context.Usuarios.Single(u => u.NombreUsuario == UsuarioConectadoActual); //Se recoge el usuario actual a través del nombre de usuario (Es único y más facil de recordar que la id)
+
+
+            //Recoge los amigos del usuario revisando dentro de la tabla que el usuario pertenezca al registro como el que hizo la petición o la recibió
+            var amigosIds = context.Amigos
+                .Where(a =>
+                    (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
+                    && a.SolicitudAceptada)
+                .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
+                .ToList();
+
+            //Recoge los chats del propio usuario
+            var chatsUsuario = context.ChatsUsuarios
+                .Where(cu => cu.IdUsuario == usuario.IdUsuario)
+                .Select(cu => cu.IdChat)
+                .ToList();
+
+
+            //Utiliza los chats recogidos anteriormente y compara la Id con los chats registrados en la tabla intermedia. Si el chat contiene la ID del chat y del Usuario, lo mete en la lista
+            var chatsConAmigos = context.ChatsUsuarios
+                .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
+                .Select(cu => cu.IdChat)
+                .Distinct()
+                .ToList();
+
+
+            //Recoge solo aquellos chats que contengan la ID que se le ha pasado
+            var chats = context.Chats
+                .Where(c => chatsConAmigos.Contains(c.IdChat))
+                .ToList();
+
+            foreach (var chatId in chatsConAmigos)
             {
-                var usuario = context.Usuarios.Single(u => u.NombreUsuario == UsuarioConectadoActual);
+                //Recoge el chat completo a través de la ID del foreach
+                var chat = chats.SingleOrDefault(c => c.IdChat == chatId);
 
-                var amigosIds = context.Amigos
-                    .Where(a =>
-                        (a.IdUsuarioRemitente == usuario.IdUsuario || a.IdUsuarioEnvio == usuario.IdUsuario)
-                        && a.SolicitudAceptada)
-                    .Select(a => a.IdUsuarioRemitente == usuario.IdUsuario ? a.IdUsuarioEnvio : a.IdUsuarioRemitente)
-                    .ToList();
 
-                var chatsUsuario = context.ChatsUsuarios
-                    .Where(cu => cu.IdUsuario == usuario.IdUsuario)
-                    .Select(cu => cu.IdChat)
-                    .ToList();
-
-                var chatsConAmigos = context.ChatsUsuarios
-                    .Where(cu => amigosIds.Contains(cu.IdUsuario) && chatsUsuario.Contains(cu.IdChat))
-                    .Select(cu => cu.IdChat)
-                    .Distinct()
-                    .ToList();
-
-                var chats = context.Chats
-                    .Where(c => chatsConAmigos.Contains(c.IdChat))
-                    .ToList();
-
-                foreach (var chatId in chatsConAmigos)
+                if (chat != null)
                 {
-                    var chat = chats.SingleOrDefault(c => c.IdChat == chatId);
-                    if (chat != null)
+                    //Recoge los participantes del chat que está actualizando en ese momento
+                    var participantes = context.ChatsUsuarios
+                        .Where(cu => cu.IdChat == chatId)
+                        .Select(cu => cu.IdUsuario)
+                        .ToList();
+
+                    bool esGrupo = participantes.Count > 2;
+
+                    if (!esGrupo)
                     {
-                        var participantes = context.ChatsUsuarios
-                            .Where(cu => cu.IdChat == chatId)
-                            .Select(cu => cu.IdUsuario)
-                            .ToList();
 
-                        bool esGrupo = participantes.Count > 2;
+                        var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
+                        var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
 
-                        if (!esGrupo)
+                        if (amigo != null)
                         {
-                            var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
-                            var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
-                            if (amigo != null)
-                            {
-                                chat.NombreChat = amigo.NombrePublico;
-                                chat.FotoChat = amigo.FotoPerfil;
-                            }
+                            chat.NombreChat = amigo.NombrePublico;
+                            chat.FotoChat = amigo.FotoPerfil;
                         }
-
-                        Chats.Add(chat);
-
                     }
+
+                    Chats.Add(chat);
+
                 }
-                ActualizarMensajesDelChatActivo(idEmisor);
             }
+
+
+            ActualizarMensajesDelChatActivo(idEmisor); //Método para actualizar la foto de perfil y nombre público del usuario en tiempo real
+
         }
+
+        /// <summary>
+        /// Actualiza las líneas del chat activo con los nuevos datos del usuario que ha notificado la actualización
+        /// </summary>
+        /// <param name="IdEmisor"></param>
         public void ActualizarMensajesDelChatActivo(string IdEmisor)
         {
             var usuario = context.Usuarios.Single(x => x.IdUsuario == IdEmisor);
@@ -466,7 +460,9 @@ namespace TThrough.mvvm.ViewModel
             }
         }
 
-
+        /// <summary>
+        /// Asigna a la variable SolicitudesPendientes verdadero o falso dependiendo de si queda alguna por aceptar
+        /// </summary>
         public void ComprobarSolicitudesPendientes()
         {
             var usuarioConectado = context.Usuarios.SingleOrDefault(x => x.NombreUsuario == UsuarioConectadoActual);
@@ -477,6 +473,12 @@ namespace TThrough.mvvm.ViewModel
             SolicitudesPendientes = context.Amigos.Any(x => x.IdUsuarioRemitente == usuarioConectado.IdUsuario && !x.SolicitudAceptada);
         }
 
+        /// <summary>
+        /// Método que hace que no se tenga que realizar un query dentro del switch del manejador de la acción "EnMensajeRecibido"
+        /// Devuelve los bytes recuperados de la BBDD en Imagen
+        /// </summary>
+        /// <param name="idUser"></param>
+        /// <returns></returns>
         private ImageSource ObtenerFotoPerfil(string idUser)
         {
             var fotoPerfilUsuario = context.Usuarios.SingleOrDefault(x => x.IdUsuario == idUser).FotoPerfil;
@@ -484,47 +486,50 @@ namespace TThrough.mvvm.ViewModel
             return ConvertBytesToImage(fotoPerfilUsuario);
         }
 
+
+        /// <summary>
+        /// Carga los chats del usuario. Funcionamiento similar al método utilizado para actualizar la vista.
+        /// </summary>
         public void CargarChats()
         {
             Chats.Clear();
 
-            using (var context = TalkthroughContextFactory.SendContextFactory())
+
+            var usuario = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
+
+
+            var chatsUsuarioIds = context.ChatsUsuarios
+                .Where(cu => cu.IdUsuario == usuario.IdUsuario)
+                .Select(cu => cu.IdChat)
+                .ToList();
+
+            var chats = context.Chats
+                .Where(c => chatsUsuarioIds.Contains(c.IdChat))
+                .ToList();
+
+            foreach (var chat in chats)
             {
-                var usuario = context.Usuarios.Single(x => x.NombreUsuario == UsuarioConectadoActual);
-
-                
-                var chatsUsuarioIds = context.ChatsUsuarios
-                    .Where(cu => cu.IdUsuario == usuario.IdUsuario)
-                    .Select(cu => cu.IdChat)
+                var participantes = context.ChatsUsuarios
+                    .Where(cu => cu.IdChat == chat.IdChat)
+                    .Select(cu => cu.IdUsuario)
                     .ToList();
 
-                var chats = context.Chats
-                    .Where(c => chatsUsuarioIds.Contains(c.IdChat))
-                    .ToList();
+                bool esGrupo = participantes.Count > 2;
 
-                foreach (var chat in chats)
+                if (!esGrupo)
                 {
-                    var participantes = context.ChatsUsuarios
-                        .Where(cu => cu.IdChat == chat.IdChat)
-                        .Select(cu => cu.IdUsuario)
-                        .ToList();
-
-                    bool esGrupo = participantes.Count > 2;
-
-                    if (!esGrupo)
+                    var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
+                    var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
+                    if (amigo != null)
                     {
-                        var otroUsuarioId = participantes.FirstOrDefault(id => id != usuario.IdUsuario);
-                        var amigo = context.Usuarios.FirstOrDefault(u => u.IdUsuario == otroUsuarioId);
-                        if (amigo != null)
-                        {
-                            chat.NombreChat = amigo.NombrePublico;
-                            chat.FotoChat = amigo.FotoPerfil;
-                        }
+                        chat.NombreChat = amigo.NombrePublico;
+                        chat.FotoChat = amigo.FotoPerfil;
                     }
-
-                    Chats.Add(chat);
                 }
+
+                Chats.Add(chat);
             }
+
         }
 
 
@@ -572,8 +577,8 @@ namespace TThrough.mvvm.ViewModel
                         .Select(cu => cu.IdUsuario)
                         .ToList();
 
-                        
-                        
+
+
                         context.Chats.Remove(chat);
                         //var mensajeJson = new MensajeJson
                         //{

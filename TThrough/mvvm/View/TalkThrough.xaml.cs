@@ -35,6 +35,8 @@ namespace TThrough.mvvm.View
             DataContext = viewModel;
 
 
+
+            //LLama al evento del viewmodel para notificar a la interfaz de que añada el nuevo chat
             viewModel.ChatCreado = chatCreado =>
             {
                 App.Current.Dispatcher.Invoke(() =>
@@ -43,6 +45,8 @@ namespace TThrough.mvvm.View
                 });
             };
 
+
+            //Llama al evento del viewmodel para eliminar el chat de la lista de usuarios
             viewModel.ChatEliminado = chatAEliminar =>
             {
                 App.Current.Dispatcher.Invoke(() =>
@@ -51,17 +55,26 @@ namespace TThrough.mvvm.View
                 });
             };
 
+            //Se llama a la action desde el viewmodel para generar las pantallas
             viewModel.PopUpAmigosAction = () =>
             {
+
+                //Recoge el usuario actual para pasarselo al viewmodel
                 var usuarioActual = viewModel.context.Usuarios.Single(u => u.NombreUsuario == viewModel.UsuarioConectadoActual);
+
+                //Añade el usuario al viewmodel y el servicio TCP para poder enviar mensajes
                 var popUpViewModel = new PopUpAñadirAmigosViewModel(viewModel.context, usuarioActual,viewModel.conexionTCP);
 
+                //Añade el viewmodel a la ventana para meterlo como contexto de datos
                 var popUpAñadirAmigos = new PopUpAñadirAmigos(popUpViewModel);
 
+
+                //Usa la notificación del viewmodel para cerrar desde aquí la ventana y respetar MVVM
                 popUpViewModel.CerrarPopup = () => popUpAñadirAmigos.Close();
 
                 popUpAñadirAmigos.Show();
             };
+
 
             viewModel.PopUpSolicitudesAction = () =>
             {
@@ -69,6 +82,8 @@ namespace TThrough.mvvm.View
                 var popUpSolicitudesPendientesVM = new PopUpSolicitudesPendientesViewModel(usuarioActual,viewModel.conexionTCP);
                 var popUpSolicitudes = new PopUpSolicitudesPendientes(popUpSolicitudesPendientesVM);
 
+
+                //Comprueba las solicitudes y las carga en la interfaz
                 popUpSolicitudesPendientesVM.SolicitudAceptada = () =>
                 {
                     viewModel.ComprobarSolicitudesPendientes();

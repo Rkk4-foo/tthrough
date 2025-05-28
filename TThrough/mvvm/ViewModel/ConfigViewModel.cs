@@ -27,6 +27,7 @@ namespace TThrough.mvvm.ViewModel
             
 
         public Action? CerrarPopUp;
+
         public Action<string>? SeleccionarArchivo;
 
         private TalkthroughContext _context = TalkthroughContextFactory.SendContextFactory();
@@ -67,6 +68,12 @@ namespace TThrough.mvvm.ViewModel
 
         #region Methods
 
+
+        /// <summary>
+        /// Recoge la Imagen que se ha recogido en el FilePicker y la codifica como un Array de bytes
+        /// </summary>
+        /// <param name="imageSource"></param>
+        /// <returns></returns>
         public static byte[] ConvertImageToBytes(ImageSource imageSource)
         {
             var bitmapSource = imageSource as BitmapSource;
@@ -77,6 +84,12 @@ namespace TThrough.mvvm.ViewModel
             encoder.Save(ms);
             return ms.ToArray();
         }
+
+        /// <summary>
+        /// Convierte el array de bytes recuperado previamente de la base de datos y lo convierte en la imagen a mostrar.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
         public static ImageSource ConvertBytesToImage(byte[] bytes)
         {
             using var ms = new MemoryStream(bytes);
@@ -93,6 +106,10 @@ namespace TThrough.mvvm.ViewModel
             SeleccionarArchivo?.Invoke("Seleccionar imagen");
         }
 
+        /// <summary>
+        /// Guarda los cambios que haya realizado el usuario en su perfil en caso de que haya
+        /// </summary>
+        /// <returns></returns>
         public async Task GuardarCambios()
         {
             bool cambios = false;
@@ -103,15 +120,17 @@ namespace TThrough.mvvm.ViewModel
                 cambios = true;
             }
 
+
+            //Recoge la última foto de perfil del usuario para compararla posteriormente con la foto que tiene ahora el usuario
             var ultimaFotoPerfil = _context.Usuarios
                 .AsNoTracking()
                 .Single(x => x.IdUsuario == UsuarioConectado.IdUsuario)
                 .FotoPerfil;
 
-            var actualFoto = UsuarioConectado.FotoPerfil ?? Array.Empty<byte>();
-            var ultimaFoto = ultimaFotoPerfil ?? Array.Empty<byte>();
+            var FotoActual = UsuarioConectado.FotoPerfil ?? Array.Empty<byte>();
+            var UltimaFoto = ultimaFotoPerfil ?? Array.Empty<byte>();
 
-            if (!actualFoto.SequenceEqual(ultimaFoto))
+            if (!FotoActual.SequenceEqual(UltimaFoto))
             {
                 cambios = true;
             }
