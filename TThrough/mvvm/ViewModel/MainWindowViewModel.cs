@@ -184,7 +184,7 @@ namespace TThrough.mvvm.ViewModel
             await _context.SaveChangesAsync();
 
             _usuarios.Add(NuevoUsuario);
-            MessageBox.Show("Usuario añadido correctamente");
+            _dialog.MostrarDialogo("REGISTRO EXITOSO","USUARIO REGISTRADO CORRECTAMENTE EN EL SISTEMA");
         }
 
         //Revisa que exista el usuario

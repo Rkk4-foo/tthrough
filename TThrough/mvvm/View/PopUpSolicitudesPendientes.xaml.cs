@@ -45,16 +45,16 @@ namespace TThrough.mvvm.View
 
         private void Maximizar_Click(object sender, RoutedEventArgs e)
         {
-            if (Application.Current.MainWindow.WindowState != WindowState.Maximized)
-                Application.Current.MainWindow.WindowState = WindowState.Maximized;
+            if (this.WindowState != WindowState.Maximized)
+                this.WindowState = WindowState.Maximized;
             else
-                Application.Current.MainWindow.WindowState = WindowState.Normal;
+                this.WindowState = WindowState.Normal;
 
         }
 
         private void Minimizar_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.MainWindow.WindowState = WindowState.Minimized;
+            this.WindowState = WindowState.Minimized;
         }
     }
 }

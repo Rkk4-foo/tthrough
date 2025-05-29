@@ -77,10 +77,15 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <Image
-                            Width="28"
-                            Height="28"
-                            Source="{Binding FtPerfil}" />
+                        <Border
+                            Width="50"
+                            Height="50"
+                            BorderBrush="White"
+                            CornerRadius="75">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding FtPerfil}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
                         <Label
                             Content="{Binding NombreUsuario}"
                             FontSize="24"
